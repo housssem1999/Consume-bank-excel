@@ -2,6 +2,8 @@ package com.finance.dashboard.repository;
 
 import com.finance.dashboard.model.Transaction;
 import com.finance.dashboard.model.TransactionType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,7 +16,7 @@ import java.util.List;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
     
-    List<Transaction> findByDateBetween(LocalDate startDate, LocalDate endDate);
+    Page<Transaction> findByDateBetween(LocalDate startDate, LocalDate endDate, Pageable pageable);
     
     List<Transaction> findByType(TransactionType type);
     

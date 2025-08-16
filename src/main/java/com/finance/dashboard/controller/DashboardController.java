@@ -6,6 +6,9 @@ import com.finance.dashboard.model.Transaction;
 import com.finance.dashboard.repository.TransactionRepository;
 import com.finance.dashboard.service.FinancialStatisticsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,11 +23,9 @@ import java.util.Map;
 @RequestMapping("/api/dashboard")
 @CrossOrigin(origins = "http://localhost:3000")
 public class DashboardController {
-    
-    @Autowired
+
     private final FinancialStatisticsService financialStatisticsService;
 
-    @Autowired
     private final TransactionRepository transactionRepository;
     
     @Autowired
@@ -70,25 +71,16 @@ public class DashboardController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
         
-        List<Transaction> transactions;
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Transaction> transactionPage;
         
         if (startDate != null && endDate != null) {
-            transactions = transactionRepository.findByDateBetween(startDate, endDate);
+            transactionPage = transactionRepository.findByDateBetween(startDate, endDate, pageable);
         } else {
-            transactions = transactionRepository.findAll();
+            transactionPage = transactionRepository.findAll(pageable);
         }
         
-        // Simple pagination (you might want to use Spring Data's Pageable for better performance)
-        int start = page * size;
-        int end = Math.min(start + size, transactions.size());
-        
-        if (start >= transactions.size()) {
-            transactions = List.of();
-        } else {
-            transactions = transactions.subList(start, end);
-        }
-        
-        return ResponseEntity.ok(transactions);
+        return ResponseEntity.ok(transactionPage.getContent());
     }
     
     @GetMapping("/top-expenses")

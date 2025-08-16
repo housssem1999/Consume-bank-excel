@@ -37,7 +37,11 @@ public class FinancialStatisticsService {
         // Calculate totals
         BigDecimal totalIncome = getTotalByType(TransactionType.INCOME, startDate, endDate);
         BigDecimal totalExpenses = getTotalByType(TransactionType.EXPENSE, startDate, endDate);
-        BigDecimal netIncome = totalIncome.add(totalExpenses); // expenses are negative
+        // Ensure expenses are negative before calculating net income
+        if (totalExpenses.compareTo(BigDecimal.ZERO) > 0) {
+            totalExpenses = totalExpenses.negate();
+        }
+        BigDecimal netIncome = totalIncome.add(totalExpenses); // expenses are now guaranteed to be negative
         Long totalTransactions = transactionRepository.countTransactionsBetweenDates(startDate, endDate);
         
         FinancialSummaryDto summary = new FinancialSummaryDto(totalIncome, totalExpenses, netIncome, totalTransactions);

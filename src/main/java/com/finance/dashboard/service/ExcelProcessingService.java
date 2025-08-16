@@ -25,16 +25,17 @@ import java.util.List;
 public class ExcelProcessingService {
     
     private static final Logger logger = LoggerFactory.getLogger(ExcelProcessingService.class);
-    
-    @Autowired
-    private TransactionRepository transactionRepository;
-    
-    @Autowired
-    private CategoryRepository categoryRepository;
-    
-    @Autowired
-    private CategoryService categoryService;
-    
+
+    private final TransactionRepository transactionRepository;
+
+    private final CategoryService categoryService;
+
+    public ExcelProcessingService(TransactionRepository transactionRepository,
+                                  CategoryService categoryService) {
+        this.transactionRepository = transactionRepository;
+        this.categoryService = categoryService;
+    }
+
     public List<Transaction> processExcelFile(MultipartFile file) throws IOException {
         logger.info("Processing Excel file: {}", file.getOriginalFilename());
         
