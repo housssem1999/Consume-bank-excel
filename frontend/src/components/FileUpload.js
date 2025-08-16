@@ -92,7 +92,7 @@ const FileUpload = () => {
             showIcon
             style={{ marginTop: 16 }}
             action={
-              <Button size="small" onClick={() => window.location.href = '/'}>
+              <Button size="small" onClick={() => navigate('/')}>
                 View Dashboard
               </Button>
             }

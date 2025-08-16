@@ -35,7 +35,7 @@ const TransactionList = () => {
       setTransactions(response.data);
       setPagination(prev => ({
         ...prev,
-        total: response.data.length, // Note: This is simplified pagination
+        total: response.total, // Use the total count from the server response
       }));
     } catch (err) {
       console.error('Error fetching transactions:', err);

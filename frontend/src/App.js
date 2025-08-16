@@ -70,6 +70,9 @@ function App() {
                   window.location.href = item.path;
                 }}>
                   {item.label}
+                <Link to={item.path}>
+                  {item.label}
+                </Link>
                 </a>
               )
             }))}
