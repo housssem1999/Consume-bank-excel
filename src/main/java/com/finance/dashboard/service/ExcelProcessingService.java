@@ -150,8 +150,16 @@ public class ExcelProcessingService {
             if (cell.getCellType() == CellType.NUMERIC) {
                 return BigDecimal.valueOf(cell.getNumericCellValue());
             } else if (cell.getCellType() == CellType.STRING) {
-                String amountStr = cell.getStringCellValue().replaceAll("[^\\d.-]", "");
-                return new BigDecimal(amountStr);
+                String amountStr = cell.getStringCellValue().trim();
+                // Remove thousands separators (commas), but do not allow malformed input
+                amountStr = amountStr.replace(",", "");
+                // Validate the string strictly: optional leading minus, digits, optional dot and digits
+                if (amountStr.matches("^-?\\d+(\\.\\d+)?$")) {
+                    return new BigDecimal(amountStr);
+                } else {
+                    logger.warn("Amount string '{}' is not a valid number format", amountStr);
+                    return null;
+                }
             }
         } catch (Exception e) {
             logger.warn("Error parsing amount: {}", e.getMessage());

@@ -22,10 +22,17 @@ import java.util.Map;
 public class DashboardController {
     
     @Autowired
-    private FinancialStatisticsService financialStatisticsService;
+    private final FinancialStatisticsService financialStatisticsService;
+
+    @Autowired
+    private final TransactionRepository transactionRepository;
     
     @Autowired
-    private TransactionRepository transactionRepository;
+    public DashboardController(FinancialStatisticsService financialStatisticsService,
+                              TransactionRepository transactionRepository) {
+        this.financialStatisticsService = financialStatisticsService;
+        this.transactionRepository = transactionRepository;
+    }
     
     @GetMapping("/summary")
     public ResponseEntity<FinancialSummaryDto> getFinancialSummary(

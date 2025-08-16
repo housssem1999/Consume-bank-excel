@@ -19,10 +19,14 @@ public class CategoryService {
     private static final Logger logger = LoggerFactory.getLogger(CategoryService.class);
     
     @Autowired
-    private CategoryRepository categoryRepository;
+    private final CategoryRepository categoryRepository;
     
     private Map<String, String> categoryKeywords;
     private Category defaultCategory;
+
+    public CategoryService(CategoryRepository categoryRepository) {
+        this.categoryRepository = categoryRepository;
+    }
     
     @PostConstruct
     public void initializeCategories() {

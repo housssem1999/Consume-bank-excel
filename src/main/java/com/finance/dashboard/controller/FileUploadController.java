@@ -22,7 +22,11 @@ public class FileUploadController {
     private static final Logger logger = LoggerFactory.getLogger(FileUploadController.class);
     
     @Autowired
-    private ExcelProcessingService excelProcessingService;
+    private final ExcelProcessingService excelProcessingService;
+
+    public FileUploadController(ExcelProcessingService excelProcessingService) {
+        this.excelProcessingService = excelProcessingService;
+    }
     
     @PostMapping("/excel")
     public ResponseEntity<Map<String, Object>> uploadExcelFile(@RequestParam("file") MultipartFile file) {

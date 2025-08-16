@@ -25,7 +25,11 @@ public class FinancialStatisticsService {
     private static final Logger logger = LoggerFactory.getLogger(FinancialStatisticsService.class);
     
     @Autowired
-    private TransactionRepository transactionRepository;
+    private final TransactionRepository transactionRepository;
+
+    public FinancialStatisticsService(TransactionRepository transactionRepository) {
+        this.transactionRepository = transactionRepository;
+    }
     
     public FinancialSummaryDto getFinancialSummary(LocalDate startDate, LocalDate endDate) {
         logger.info("Generating financial summary from {} to {}", startDate, endDate);
