@@ -22,10 +22,14 @@ export const dashboardAPI = {
   
   getCurrentYearSummary: () => api.get('/dashboard/summary/current-year'),
   
-  getTransactions: (startDate, endDate, page = 0, size = 50) => {
+  getTransactions: (startDate, endDate, page = 0, size = 50, sortBy = null, sortDir = 'desc') => {
     const params = { page, size };
     if (startDate) params.startDate = startDate;
     if (endDate) params.endDate = endDate;
+    if (sortBy) {
+      params.sortBy = sortBy;
+      params.sortDir = sortDir;
+    }
     return api.get('/dashboard/transactions', { params });
   },
   

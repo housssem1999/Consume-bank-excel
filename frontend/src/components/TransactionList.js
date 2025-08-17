@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Card, DatePicker, Button, Tag, Space, Spin, Alert } from 'antd';
-import { SearchOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Table, Card, DatePicker, Button, Tag, Space, Alert } from 'antd';
+import { ReloadOutlined } from '@ant-design/icons';
 import { dashboardAPI, formatCurrency, formatDate } from '../services/api';
 import moment from 'moment';
 
@@ -19,8 +19,12 @@ const TransactionList = () => {
     pageSize: 50,
     total: 0,
   });
+  const [sorting, setSorting] = useState({
+    field: null,
+    order: null,
+  });
 
-  const fetchTransactions = async (startDate, endDate, page = 0, size = 50) => {
+  const fetchTransactions = async (startDate, endDate, page = 0, size = 50, sortBy = null, sortDir = 'desc') => {
     try {
       setLoading(true);
       setError(null);
@@ -29,13 +33,17 @@ const TransactionList = () => {
         startDate ? startDate.format('YYYY-MM-DD') : null,
         endDate ? endDate.format('YYYY-MM-DD') : null,
         page,
-        size
+        size,
+        sortBy,
+        sortDir
       );
       
-      setTransactions(response.data);
+      setTransactions(response.data.data);
       setPagination(prev => ({
         ...prev,
-        total: response.total, // Use the total count from the server response
+        total: response.data.total,
+        current: response.data.page + 1, // Convert 0-based to 1-based
+        pageSize: response.data.size,
       }));
     } catch (err) {
       console.error('Error fetching transactions:', err);
@@ -46,18 +54,66 @@ const TransactionList = () => {
   };
 
   useEffect(() => {
-    fetchTransactions(dateRange[0], dateRange[1]);
-  }, []);
+    fetchTransactions(dateRange[0], dateRange[1], 0, pagination.pageSize);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDateRangeChange = (dates) => {
     setDateRange(dates);
     if (dates && dates.length === 2) {
-      fetchTransactions(dates[0], dates[1]);
+      // Reset pagination when date range changes
+      setPagination(prev => ({
+        ...prev,
+        current: 1,
+      }));
+      setSorting({ field: null, order: null });
+      fetchTransactions(dates[0], dates[1], 0, pagination.pageSize);
     }
   };
 
   const handleRefresh = () => {
-    fetchTransactions(dateRange[0], dateRange[1]);
+    // Reset pagination and sorting on refresh
+    setPagination(prev => ({
+      ...prev,
+      current: 1,
+    }));
+    setSorting({ field: null, order: null });
+    fetchTransactions(dateRange[0], dateRange[1], 0, pagination.pageSize);
+  };
+
+  const handleTableChange = (paginationConfig, filters, sorter) => {
+    const { current, pageSize } = paginationConfig;
+    
+    // Update pagination state
+    setPagination({
+      current,
+      pageSize,
+      total: pagination.total,
+    });
+
+    // Update sorting state
+    let sortBy = null;
+    let sortDir = 'desc';
+    
+    if (sorter && sorter.field && sorter.order) {
+      sortBy = sorter.field;
+      sortDir = sorter.order === 'ascend' ? 'asc' : 'desc';
+      setSorting({
+        field: sorter.field,
+        order: sorter.order,
+      });
+    } else {
+      setSorting({ field: null, order: null });
+    }
+
+    // Fetch data with new parameters (convert to 0-based page index)
+    fetchTransactions(
+      dateRange[0], 
+      dateRange[1], 
+      current - 1, 
+      pageSize, 
+      sortBy, 
+      sortDir
+    );
   };
 
   const getTransactionTypeColor = (type) => {
@@ -89,7 +145,8 @@ const TransactionList = () => {
       dataIndex: 'date',
       key: 'date',
       render: (date) => formatDate(date),
-      sorter: (a, b) => new Date(a.date) - new Date(b.date),
+      sorter: true,
+      sortOrder: sorting.field === 'date' ? sorting.order : null,
       width: 120,
     },
     {
@@ -97,6 +154,8 @@ const TransactionList = () => {
       dataIndex: 'description',
       key: 'description',
       ellipsis: true,
+      sorter: true,
+      sortOrder: sorting.field === 'description' ? sorting.order : null,
       width: 300,
     },
     {
@@ -136,7 +195,8 @@ const TransactionList = () => {
           {formatCurrency(amount)}
         </span>
       ),
-      sorter: (a, b) => a.amount - b.amount,
+      sorter: true,
+      sortOrder: sorting.field === 'amount' ? sorting.order : null,
       width: 120,
       align: 'right',
     },
@@ -198,6 +258,7 @@ const TransactionList = () => {
             showTotal: (total, range) =>
               `${range[0]}-${range[1]} of ${total} transactions`,
           }}
+          onChange={handleTableChange}
           scroll={{ x: 1000 }}
           size="middle"
         />
