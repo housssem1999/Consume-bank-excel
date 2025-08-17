@@ -3,24 +3,24 @@ rules:
   # =========================
   # Backend (Spring Boot 3 - Java 17)
   # =========================
-  - match: "/src/main/java/**"
+  - match: "src/main/java/**"
     instructions: |
       - Use **Java 17** features (records, switch expressions, sealed classes, etc. when appropriate).
       - Follow **Spring Boot 3** best practices:
         * Prefer constructor injection over field injection.
         * Use @ConfigurationProperties for structured config.
         * Use Jakarta EE annotations (since Spring Boot 3 migrated from javax.* to jakarta.*).
-        * Organize packages by feature/domain (not by layer).
+        * Organize packages by feature/domain (not only by layer).
       - Apply **SOLID principles**:
         * Single Responsibility: each class should serve one purpose.
         * Open/Closed: add new behavior via extension, not modification.
         * Liskov Substitution: ensure subclasses can replace their parents.
-        * Interface Segregation: prefer focused, small interfaces.
+        * Interface Segregation: keep interfaces small and focused.
         * Dependency Inversion: depend on abstractions, not implementations.
-      - Follow **Clean Code** guidelines:
+      - Follow **Clean Code**:
         * Use meaningful names for classes, methods, and variables.
         * Keep methods small (<20 lines) and cohesive.
-        * Write JavaDocs for public classes and methods.
+        * Add JavaDocs for public classes and methods.
         * Prefer immutability where possible.
       - Deployment practices:
         * Externalize config in `application.yaml`/`application.properties`.
@@ -29,45 +29,47 @@ rules:
         * Add Spring Boot Actuator for health checks.
         * Ensure cloud-native readiness.
 
-  - match: "/src/test/java/**"
+  - match: "src/test/java/**"
     instructions: |
       - Write **unit tests** with JUnit 5 + Mockito.
-      - Follow **AAA pattern** (Arrange, Act, Assert).
+      - Follow the **AAA pattern** (Arrange, Act, Assert).
       - Use @SpringBootTest only for integration tests.
       - Keep tests fast, isolated, and descriptive.
       - Ensure high coverage for services and controllers.
 
   # =========================
-  # Frontend (React)
+  # Frontend (React - JavaScript)
   # =========================
   - match: "frontend/src/**"
     instructions: |
-      - Use **React (with TypeScript if enabled, otherwise modern ES6+ JavaScript)**.
-      - Follow **Clean Code & React best practices**:
-        * Use functional components with hooks (avoid class components).
-        * Prefer custom hooks for reusable logic.
-        * Keep components small and focused.
-        * Use clear, self-descriptive naming conventions.
-        * Organize files by feature/module, not by type.
-      - Apply **SOLID principles in React context**:
+      - Use **modern ES6+ JavaScript** and **React functional components**.
+      - Best practices:
+        * Use hooks (useState, useEffect, useContext, etc.) instead of class components.
+        * Extract reusable logic into custom hooks.
+        * Keep components small, focused, and reusable.
+        * Use clear and descriptive names for components, props, and variables.
+        * Organize files by feature/module, not only by type.
+      - Apply **SOLID principles in React**:
         * Single Responsibility: one component = one purpose.
-        * Open/Closed: make components extensible via props.
-        * Interface Segregation: keep props interfaces small (TS).
-        * Dependency Inversion: abstract API calls in separate services.
+        * Open/Closed: extend components via props instead of modifying code.
+        * Interface Segregation: keep props objects small.
+        * Dependency Inversion: abstract API calls in separate service modules.
       - Deployment practices:
-        * Use environment variables via `.env` files.
-        * Optimize build with tree-shaking & code splitting.
-        * Add error boundaries.
-        * Ensure accessibility (ARIA, semantic HTML).
-        * Optimize performance (memoization, lazy loading).
+        * Use `.env` for environment-specific configuration (API URLs, keys).
+        * Optimize builds with tree-shaking and code splitting (React.lazy, Suspense).
+        * Add error boundaries for resilience.
+        * Ensure accessibility (semantic HTML, ARIA).
+        * Optimize performance (memoization with React.memo/useMemo).
       - Testing:
-        * Write unit tests with Jest + React Testing Library.
-        * Ensure coverage for UI logic and hooks.
+        * Use **Jest + React Testing Library**.
+        * Test behavior, not implementation details.
+        * Mock API calls in tests.
 
   - match: "frontend/src/__tests__/**"
     instructions: |
+      - Use **Jest + React Testing Library**.
       - Follow testing best practices:
-        * Use Jest + React Testing Library.
-        * Test behavior, not implementation details.
-        * Keep tests isolated, deterministic, and descriptive.
-        * Use mock services for API calls.
+        * Arrange, Act, Assert (AAA pattern).
+        * Write descriptive test names.
+        * Keep tests isolated and deterministic.
+        * Mock external services and API calls.
