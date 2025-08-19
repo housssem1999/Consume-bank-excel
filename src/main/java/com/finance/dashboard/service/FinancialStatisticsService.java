@@ -167,8 +167,9 @@ public class FinancialStatisticsService {
     }
     
     public List<CategorySummaryDto> getTopExpenseCategories(int limit) {
-        LocalDate startDate = LocalDate.now().minusMonths(12);
-        LocalDate endDate = LocalDate.now();
+        // Use a very broad date range to include all historical data
+        LocalDate startDate = LocalDate.of(2000, 1, 1); // Far in the past
+        LocalDate endDate = LocalDate.of(2100, 12, 31); // Far in the future
         
         List<CategorySummaryDto> categories = getCategorySummary(TransactionType.EXPENSE, startDate, endDate);
         return categories.stream()
