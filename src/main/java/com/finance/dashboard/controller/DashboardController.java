@@ -2,6 +2,7 @@ package com.finance.dashboard.controller;
 
 import com.finance.dashboard.dto.CategorySummaryDto;
 import com.finance.dashboard.dto.FinancialSummaryDto;
+import com.finance.dashboard.dto.RecurringTransactionDto;
 import com.finance.dashboard.model.Transaction;
 import com.finance.dashboard.repository.TransactionRepository;
 import com.finance.dashboard.service.FinancialStatisticsService;
@@ -149,5 +150,11 @@ public class DashboardController {
         stats.put("totalTransactions", totalTransactions);
         
         return ResponseEntity.ok(stats);
+    }
+    
+    @GetMapping("/recurring-transactions")
+    public ResponseEntity<List<RecurringTransactionDto>> getRecurringTransactions() {
+        List<RecurringTransactionDto> recurringTransactions = financialStatisticsService.getRecurringTransactions();
+        return ResponseEntity.ok(recurringTransactions);
     }
 }
