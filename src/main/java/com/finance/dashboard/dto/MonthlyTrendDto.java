@@ -1,6 +1,7 @@
 package com.finance.dashboard.dto;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public class MonthlyTrendDto {
     
@@ -71,6 +72,15 @@ public class MonthlyTrendDto {
     
     public void setNetAmount(BigDecimal netAmount) {
         this.netAmount = netAmount;
+    }
+    
+    public BigDecimal getSavingsRate() {
+        if (income == null || income.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+        // Calculate savings rate as (netAmount / income) * 100
+        return netAmount.divide(income, 4, RoundingMode.HALF_UP)
+                       .multiply(BigDecimal.valueOf(100));
     }
     
     private String getMonthName(Integer month) {
