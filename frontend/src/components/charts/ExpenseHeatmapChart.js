@@ -1,10 +1,9 @@
 import React from 'react';
-import { Chart as ChartJS, LinearScale, CategoryScale, Tooltip, Legend } from 'chart.js';
-import { MatrixController, MatrixElement } from 'chartjs-chart-matrix';
-import { Chart } from 'react-chartjs-2';
-import { Empty } from 'antd';
+import { Chart as ChartJS, CategoryScale, LinearScale, Tooltip, Legend } from 'chart.js';
+import { Bar } from 'react-chartjs-2';
+import { Empty, Table } from 'antd';
 
-ChartJS.register(LinearScale, CategoryScale, Tooltip, Legend, MatrixController, MatrixElement);
+ChartJS.register(CategoryScale, LinearScale, Tooltip, Legend);
 
 const ExpenseHeatmapChart = ({ data }) => {
   if (!data || data.length === 0) {
@@ -24,101 +23,72 @@ const ExpenseHeatmapChart = ({ data }) => {
     dataMap.set(key, parseFloat(item.amount));
   });
   
-  // Prepare data for matrix chart
-  const chartData = [];
-  let maxValue = 0;
-  
-  categories.forEach((category, categoryIndex) => {
-    daysOfWeek.forEach((day, dayIndex) => {
+  // Create table data for better visualization
+  const tableData = categories.map((category, index) => {
+    const row = { key: index, category };
+    daysOfWeek.forEach(day => {
       const key = `${category}-${day}`;
-      const value = dataMap.get(key) || 0;
-      maxValue = Math.max(maxValue, value);
-      
-      chartData.push({
-        x: dayIndex,
-        y: categoryIndex, 
-        v: value
-      });
+      const amount = dataMap.get(key) || 0;
+      row[day] = amount > 0 ? `$${amount.toFixed(2)}` : '-';
     });
+    return row;
   });
 
-  const chartConfig = {
-    type: 'matrix',
-    data: {
-      datasets: [{
-        label: 'Expenses',
-        data: chartData,
-        backgroundColor: function(ctx) {
-          const value = ctx.parsed.v;
-          const alpha = maxValue > 0 ? (value / maxValue) : 0;
-          return `rgba(255, 107, 107, ${alpha})`;
-        },
-        borderColor: '#fff',
-        borderWidth: 1,
-        width: ({chart}) => (chart.chartArea || {}).width / daysOfWeek.length,
-        height: ({chart}) => (chart.chartArea || {}).height / categories.length,
-      }]
+  const columns = [
+    {
+      title: 'Category',
+      dataIndex: 'category',
+      key: 'category',
+      fixed: 'left',
+      width: 120,
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: {
-          type: 'linear',
-          position: 'top',
-          min: -0.5,
-          max: daysOfWeek.length - 0.5,
-          ticks: {
-            callback: function(value) {
-              return daysOfWeek[value] || '';
-            },
-            stepSize: 1
-          },
-          grid: {
-            display: false
-          }
-        },
-        y: {
-          type: 'linear',
-          min: -0.5,
-          max: categories.length - 0.5,
-          ticks: {
-            callback: function(value) {
-              return categories[value] || '';
-            },
-            stepSize: 1
-          },
-          grid: {
-            display: false
-          }
-        }
-      },
-      plugins: {
-        legend: {
-          display: false
-        },
-        tooltip: {
-          callbacks: {
-            title: function() {
-              return '';
-            },
-            label: function(context) {
-              const categoryIndex = Math.round(context.parsed.y);
-              const dayIndex = Math.round(context.parsed.x);
-              const category = categories[categoryIndex];
-              const day = daysOfWeek[dayIndex];
-              const amount = context.parsed.v;
-              return `${category} - ${day}: $${amount.toFixed(2)}`;
-            }
-          }
-        }
+    ...daysOfWeek.map(day => ({
+      title: day.substring(0, 3), // Show only first 3 letters
+      dataIndex: day,
+      key: day,
+      width: 80,
+      align: 'center',
+      render: (value, record) => {
+        const key = `${record.category}-${day}`;
+        const amount = dataMap.get(key) || 0;
+        if (amount === 0) return <span style={{ color: '#ccc' }}>-</span>;
+        
+        // Calculate intensity based on max value for color coding
+        const maxAmount = Math.max(...Array.from(dataMap.values()));
+        const intensity = amount / maxAmount;
+        const backgroundColor = `rgba(255, 107, 107, ${intensity * 0.8 + 0.1})`;
+        
+        return (
+          <div 
+            style={{ 
+              backgroundColor, 
+              padding: '4px', 
+              borderRadius: '4px',
+              color: intensity > 0.5 ? 'white' : 'black',
+              fontWeight: 'bold',
+              fontSize: '12px'
+            }}
+          >
+            ${amount.toFixed(0)}
+          </div>
+        );
       }
-    }
-  };
+    }))
+  ];
 
   return (
     <div style={{ height: '400px', position: 'relative' }}>
-      <Chart {...chartConfig} />
+      <div style={{ marginBottom: '16px', fontSize: '14px', color: '#666' }}>
+        Color intensity represents spending amount. Darker = Higher spending.
+      </div>
+      <Table
+        columns={columns}
+        dataSource={tableData}
+        pagination={false}
+        size="small"
+        scroll={{ x: 800 }}
+        style={{ fontSize: '12px' }}
+      />
     </div>
   );
 };
