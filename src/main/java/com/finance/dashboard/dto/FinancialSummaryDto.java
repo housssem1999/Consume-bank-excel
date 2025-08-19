@@ -13,6 +13,7 @@ public class FinancialSummaryDto {
     private List<CategorySummaryDto> expensesByCategory;
     private List<CategorySummaryDto> incomeByCategory;
     private List<MonthlyTrendDto> monthlyTrends;
+    private ForecastDto forecast;
     
     // Constructors
     public FinancialSummaryDto() {}
@@ -80,5 +81,13 @@ public class FinancialSummaryDto {
     
     public void setMonthlyTrends(List<MonthlyTrendDto> monthlyTrends) {
         this.monthlyTrends = monthlyTrends;
+    }
+    
+    public ForecastDto getForecast() {
+        return forecast;
+    }
+    
+    public void setForecast(ForecastDto forecast) {
+        this.forecast = forecast;
     }
 }
