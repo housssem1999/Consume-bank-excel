@@ -3,6 +3,7 @@ package com.finance.dashboard.service;
 import com.finance.dashboard.dto.CategorySummaryDto;
 import com.finance.dashboard.dto.FinancialSummaryDto;
 import com.finance.dashboard.dto.MonthlyTrendDto;
+import com.finance.dashboard.dto.NetWorthTrendDto;
 import com.finance.dashboard.model.TransactionType;
 import com.finance.dashboard.repository.TransactionRepository;
 import org.slf4j.Logger;
@@ -183,5 +184,45 @@ public class FinancialStatisticsService {
         
         BigDecimal totalExpenses = getTotalByType(TransactionType.EXPENSE, startDate, endDate);
         return totalExpenses.abs().divide(BigDecimal.valueOf(months), 2, RoundingMode.HALF_UP);
+    }
+    
+    public List<NetWorthTrendDto> getNetWorthTrends() {
+        logger.info("Calculating net worth trends");
+        
+        // Get monthly trends first
+        List<MonthlyTrendDto> monthlyTrends = getMonthlyTrends();
+        
+        if (monthlyTrends.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        List<NetWorthTrendDto> netWorthTrends = new ArrayList<>();
+        BigDecimal cumulativeNetWorth = BigDecimal.ZERO;
+        BigDecimal previousNetWorth = BigDecimal.ZERO;
+        
+        for (MonthlyTrendDto trend : monthlyTrends) {
+            // Calculate monthly net income (income - expenses)
+            BigDecimal monthlyNetIncome = trend.getNetAmount();
+            
+            // Add to cumulative net worth
+            cumulativeNetWorth = cumulativeNetWorth.add(monthlyNetIncome);
+            
+            // Calculate change from previous month
+            BigDecimal netWorthChange = cumulativeNetWorth.subtract(previousNetWorth);
+            
+            NetWorthTrendDto netWorthTrend = new NetWorthTrendDto(
+                trend.getYear(),
+                trend.getMonth(),
+                monthlyNetIncome,
+                cumulativeNetWorth,
+                netWorthChange
+            );
+            
+            netWorthTrends.add(netWorthTrend);
+            previousNetWorth = cumulativeNetWorth;
+        }
+        
+        logger.info("Generated {} net worth trend data points", netWorthTrends.size());
+        return netWorthTrends;
     }
 }

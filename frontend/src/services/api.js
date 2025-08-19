@@ -40,6 +40,8 @@ export const dashboardAPI = {
     api.get('/dashboard/average-monthly-expenses', { params: { months } }),
   
   getQuickStats: () => api.get('/dashboard/stats'),
+  
+  getNetWorthTrends: () => api.get('/dashboard/net-worth-trends'),
 };
 
 // File Upload API

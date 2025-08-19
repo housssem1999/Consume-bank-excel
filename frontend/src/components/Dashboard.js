@@ -6,6 +6,7 @@ import ExpenseChart from './charts/ExpenseChart';
 import IncomeChart from './charts/IncomeChart';
 import MonthlyTrendChart from './charts/MonthlyTrendChart';
 import SavingsRateChart from './charts/SavingsRateChart';
+import NetWorthTrendChart from './charts/NetWorthTrendChart';
 import moment from 'moment';
 
 const { RangePicker } = DatePicker;
@@ -14,6 +15,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [summary, setSummary] = useState(null);
+  const [netWorthTrends, setNetWorthTrends] = useState([]);
   const [dateRange, setDateRange] = useState([
     moment().startOf('year'),
     moment().endOf('year')
@@ -24,12 +26,17 @@ const Dashboard = () => {
       setLoading(true);
       setError(null);
       
-      const response = await dashboardAPI.getFinancialSummary(
+      // Fetch financial summary
+      const summaryResponse = await dashboardAPI.getFinancialSummary(
         startDate ? startDate.format('YYYY-MM-DD') : null,
         endDate ? endDate.format('YYYY-MM-DD') : null
       );
       
-      setSummary(response.data);
+      // Fetch net worth trends (independent of date range for now)
+      const netWorthResponse = await dashboardAPI.getNetWorthTrends();
+      
+      setSummary(summaryResponse.data);
+      setNetWorthTrends(netWorthResponse.data);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
       setError('Failed to load dashboard data. Please try again.');
@@ -210,6 +217,12 @@ const Dashboard = () => {
           <Card title="Savings Rate Over Time" className="chart-container">
             <SavingsRateChart data={summary?.monthlyTrends || []} />
           </Card>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        <Col span={24}>
+          <NetWorthTrendChart data={netWorthTrends} />
         </Col>
       </Row>
     </div>
