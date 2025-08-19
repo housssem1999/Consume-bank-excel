@@ -5,6 +5,7 @@ import { dashboardAPI, formatCurrency } from '../services/api';
 import ExpenseChart from './charts/ExpenseChart';
 import IncomeChart from './charts/IncomeChart';
 import MonthlyTrendChart from './charts/MonthlyTrendChart';
+import TopExpenseChart from './charts/TopExpenseChart';
 import SavingsRateChart from './charts/SavingsRateChart';
 import moment from 'moment';
 
@@ -14,6 +15,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [summary, setSummary] = useState(null);
+  const [topExpenses, setTopExpenses] = useState([]);
   const [dateRange, setDateRange] = useState([
     moment().startOf('year'),
     moment().endOf('year')
@@ -24,12 +26,17 @@ const Dashboard = () => {
       setLoading(true);
       setError(null);
       
-      const response = await dashboardAPI.getFinancialSummary(
-        startDate ? startDate.format('YYYY-MM-DD') : null,
-        endDate ? endDate.format('YYYY-MM-DD') : null
-      );
+      // Fetch both summary and top expenses data
+      const [summaryResponse, topExpensesResponse] = await Promise.all([
+        dashboardAPI.getFinancialSummary(
+          startDate ? startDate.format('YYYY-MM-DD') : null,
+          endDate ? endDate.format('YYYY-MM-DD') : null
+        ),
+        dashboardAPI.getTopExpenseCategories(5)
+      ]);
       
-      setSummary(response.data);
+      setSummary(summaryResponse.data);
+      setTopExpenses(topExpensesResponse.data);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
       setError('Failed to load dashboard data. Please try again.');
@@ -193,6 +200,14 @@ const Dashboard = () => {
         <Col xs={24} lg={12}>
           <Card title="Income by Category" className="chart-container">
             <IncomeChart data={summary?.incomeByCategory || []} />
+          </Card>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        <Col span={24}>
+          <Card title="Top 5 Expense Categories" className="chart-container">
+            <TopExpenseChart data={topExpenses} />
           </Card>
         </Col>
       </Row>
