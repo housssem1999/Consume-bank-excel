@@ -2,6 +2,7 @@ package com.finance.dashboard.service;
 
 import com.finance.dashboard.dto.CategorySummaryDto;
 import com.finance.dashboard.dto.FinancialSummaryDto;
+import com.finance.dashboard.dto.ForecastDto;
 import com.finance.dashboard.dto.MonthlyTrendDto;
 import com.finance.dashboard.model.TransactionType;
 import com.finance.dashboard.repository.TransactionRepository;
@@ -52,6 +53,9 @@ public class FinancialStatisticsService {
         
         // Add monthly trends
         summary.setMonthlyTrends(getMonthlyTrends());
+        
+        // Add forecast for next month
+        summary.setForecast(calculateForecast());
         
         return summary;
     }
@@ -183,5 +187,113 @@ public class FinancialStatisticsService {
         
         BigDecimal totalExpenses = getTotalByType(TransactionType.EXPENSE, startDate, endDate);
         return totalExpenses.abs().divide(BigDecimal.valueOf(months), 2, RoundingMode.HALF_UP);
+    }
+    
+    /**
+     * Calculate forecast for the next month using linear regression on the last 6 months of data
+     */
+    public ForecastDto calculateForecast() {
+        List<MonthlyTrendDto> trends = getMonthlyTrends();
+        
+        if (trends.size() < 3) {
+            // Not enough data for meaningful forecast
+            return null;
+        }
+        
+        // Get the last 6 months of data (or all available if less than 6)
+        int dataPoints = Math.min(6, trends.size());
+        List<MonthlyTrendDto> recentTrends = trends.subList(trends.size() - dataPoints, trends.size());
+        
+        // Calculate next month's date
+        LocalDate nextMonth = LocalDate.now().plusMonths(1);
+        
+        // Use linear regression for income and expenses
+        BigDecimal projectedIncome = calculateLinearRegressionProjection(recentTrends, "income");
+        BigDecimal projectedExpenses = calculateLinearRegressionProjection(recentTrends, "expenses");
+        
+        // Calculate confidence bounds using standard deviation
+        BigDecimal incomeStdDev = calculateStandardDeviation(recentTrends, "income");
+        BigDecimal expensesStdDev = calculateStandardDeviation(recentTrends, "expenses");
+        
+        // Use the larger standard deviation for conservative estimate
+        BigDecimal confidenceMargin = incomeStdDev.max(expensesStdDev);
+        BigDecimal projectedNet = projectedIncome.subtract(projectedExpenses.abs());
+        
+        BigDecimal lowerBound = projectedNet.subtract(confidenceMargin);
+        BigDecimal upperBound = projectedNet.add(confidenceMargin);
+        
+        return new ForecastDto(
+            nextMonth.getYear(),
+            nextMonth.getMonthValue(),
+            projectedIncome,
+            projectedExpenses,
+            lowerBound,
+            upperBound,
+            "LINEAR_REGRESSION"
+        );
+    }
+    
+    private BigDecimal calculateLinearRegressionProjection(List<MonthlyTrendDto> trends, String type) {
+        int n = trends.size();
+        if (n < 2) return BigDecimal.ZERO;
+        
+        // Simple linear regression: y = mx + b
+        double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+        
+        for (int i = 0; i < n; i++) {
+            double x = i + 1; // Month index (1, 2, 3, ...)
+            double y = getValueForType(trends.get(i), type).doubleValue();
+            
+            sumX += x;
+            sumY += y;
+            sumXY += x * y;
+            sumX2 += x * x;
+        }
+        
+        // Calculate slope (m) and intercept (b)
+        double m = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+        double b = (sumY - m * sumX) / n;
+        
+        // Project next month (x = n + 1)
+        double projection = m * (n + 1) + b;
+        
+        // Ensure non-negative values and reasonable bounds
+        projection = Math.max(0, projection);
+        
+        return BigDecimal.valueOf(projection).setScale(2, RoundingMode.HALF_UP);
+    }
+    
+    private BigDecimal calculateStandardDeviation(List<MonthlyTrendDto> trends, String type) {
+        if (trends.size() < 2) return BigDecimal.ZERO;
+        
+        // Calculate mean
+        double mean = trends.stream()
+            .mapToDouble(trend -> getValueForType(trend, type).doubleValue())
+            .average()
+            .orElse(0.0);
+        
+        // Calculate variance
+        double variance = trends.stream()
+            .mapToDouble(trend -> {
+                double value = getValueForType(trend, type).doubleValue();
+                return Math.pow(value - mean, 2);
+            })
+            .average()
+            .orElse(0.0);
+        
+        return BigDecimal.valueOf(Math.sqrt(variance)).setScale(2, RoundingMode.HALF_UP);
+    }
+    
+    private BigDecimal getValueForType(MonthlyTrendDto trend, String type) {
+        switch (type.toLowerCase()) {
+            case "income":
+                return trend.getIncome() != null ? trend.getIncome() : BigDecimal.ZERO;
+            case "expenses":
+                return trend.getExpenses() != null ? trend.getExpenses().abs() : BigDecimal.ZERO;
+            case "net":
+                return trend.getNetAmount() != null ? trend.getNetAmount() : BigDecimal.ZERO;
+            default:
+                return BigDecimal.ZERO;
+        }
     }
 }
