@@ -40,6 +40,15 @@ export const dashboardAPI = {
     api.get('/dashboard/average-monthly-expenses', { params: { months } }),
   
   getQuickStats: () => api.get('/dashboard/stats'),
+  
+  getBudgetComparison: () => api.get('/dashboard/budget-comparison'),
+  
+  getBudgetComparisonForPeriod: (startDate, endDate) => {
+    const params = {};
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
+    return api.get('/dashboard/budget-comparison/period', { params });
+  },
 };
 
 // File Upload API
@@ -64,6 +73,8 @@ export const categoriesAPI = {
   getCategoryById: (id) => api.get(`/categories/${id}`),
   
   createCategory: (categoryData) => api.post('/categories', categoryData),
+  
+  updateCategoryBudget: (id, budgetData) => api.put(`/categories/${id}/budget`, budgetData),
 };
 
 // Utility functions

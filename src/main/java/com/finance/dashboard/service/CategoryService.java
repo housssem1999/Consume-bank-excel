@@ -173,4 +173,8 @@ public class CategoryService {
     public Optional<Category> getCategoryByName(String name) {
         return categoryRepository.findByName(name);
     }
+    
+    public Category saveCategory(Category category) {
+        return categoryRepository.save(category);
+    }
 }

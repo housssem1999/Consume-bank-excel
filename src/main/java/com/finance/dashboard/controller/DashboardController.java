@@ -1,5 +1,6 @@
 package com.finance.dashboard.controller;
 
+import com.finance.dashboard.dto.BudgetComparisonDto;
 import com.finance.dashboard.dto.CategorySummaryDto;
 import com.finance.dashboard.dto.FinancialSummaryDto;
 import com.finance.dashboard.model.Transaction;
@@ -149,5 +150,20 @@ public class DashboardController {
         stats.put("totalTransactions", totalTransactions);
         
         return ResponseEntity.ok(stats);
+    }
+    
+    @GetMapping("/budget-comparison")
+    public ResponseEntity<List<BudgetComparisonDto>> getBudgetComparison() {
+        List<BudgetComparisonDto> budgetComparison = financialStatisticsService.getBudgetComparison();
+        return ResponseEntity.ok(budgetComparison);
+    }
+    
+    @GetMapping("/budget-comparison/period")
+    public ResponseEntity<List<BudgetComparisonDto>> getBudgetComparisonForPeriod(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        
+        List<BudgetComparisonDto> budgetComparison = financialStatisticsService.getBudgetComparisonForPeriod(startDate, endDate);
+        return ResponseEntity.ok(budgetComparison);
     }
 }

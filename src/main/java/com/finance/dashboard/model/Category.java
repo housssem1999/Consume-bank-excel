@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +24,9 @@ public class Category {
     
     private String color; // For UI visualization
     
+    @Column(precision = 15, scale = 2)
+    private BigDecimal monthlyBudget; // Monthly budget for this category
+    
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Transaction> transactions = new ArrayList<>();
@@ -34,6 +38,7 @@ public class Category {
         this.name = name;
         this.description = description;
         this.color = color;
+        this.monthlyBudget = BigDecimal.ZERO; // Default budget to zero
     }
     
     // Getters and Setters
@@ -77,6 +82,14 @@ public class Category {
         this.transactions = transactions;
     }
     
+    public BigDecimal getMonthlyBudget() {
+        return monthlyBudget;
+    }
+    
+    public void setMonthlyBudget(BigDecimal monthlyBudget) {
+        this.monthlyBudget = monthlyBudget;
+    }
+    
     @Override
     public String toString() {
         return "Category{" +
@@ -84,6 +97,7 @@ public class Category {
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", color='" + color + '\'' +
+                ", monthlyBudget=" + monthlyBudget +
                 '}';
     }
 }
