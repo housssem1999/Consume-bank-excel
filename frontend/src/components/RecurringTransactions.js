@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Card, Alert, Tag, Spin, Button, Badge, Typography } from 'antd';
-import { ReloadOutlined, CalendarOutlined, DollarOutlined } from '@ant-design/icons';
+import { Table, Card, Alert, Tag, Spin, Button, Badge, Typography, Tabs } from 'antd';
+import { ReloadOutlined, CalendarOutlined, BarChartOutlined } from '@ant-design/icons';
 import { dashboardAPI, formatCurrency, formatDate } from '../services/api';
+import RecurringTransactionsChart from './charts/RecurringTransactionsChart';
 
 const { Title, Text } = Typography;
 
@@ -238,33 +239,61 @@ const RecurringTransactions = () => {
             />
           </div>
           
-          <Table
-            columns={columns}
-            dataSource={recurringTransactions}
-            rowKey={(record) => `${record.merchant}-${record.frequency}`}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showTotal: (total, range) => 
-                `${range[0]}-${range[1]} of ${total} recurring patterns`,
-            }}
-            size="middle"
-            expandable={{
-              expandedRowRender: (record) => (
-                <div style={{ margin: 0 }}>
-                  <p><strong>Description Pattern:</strong> {record.description}</p>
-                  <p><strong>Transaction Dates:</strong></p>
-                  <div style={{ marginLeft: 16 }}>
-                    {record.transactionDates.map((date, index) => (
-                      <Tag key={index} style={{ margin: '2px' }}>
-                        {formatDate(date)}
-                      </Tag>
-                    ))}
-                  </div>
-                </div>
-              ),
-              rowExpandable: (record) => record.transactionDates && record.transactionDates.length > 0,
-            }}
+          <Tabs
+            defaultActiveKey="table"
+            items={[
+              {
+                key: 'table',
+                label: (
+                  <span>
+                    <CalendarOutlined />
+                    Table View
+                  </span>
+                ),
+                children: (
+                  <Table
+                    columns={columns}
+                    dataSource={recurringTransactions}
+                    rowKey={(record) => `${record.merchant}-${record.frequency}`}
+                    pagination={{
+                      pageSize: 10,
+                      showSizeChanger: true,
+                      showTotal: (total, range) => 
+                        `${range[0]}-${range[1]} of ${total} recurring patterns`,
+                    }}
+                    size="middle"
+                    expandable={{
+                      expandedRowRender: (record) => (
+                        <div style={{ margin: 0 }}>
+                          <p><strong>Description Pattern:</strong> {record.description}</p>
+                          <p><strong>Transaction Dates:</strong></p>
+                          <div style={{ marginLeft: 16 }}>
+                            {record.transactionDates.map((date, index) => (
+                              <Tag key={index} style={{ margin: '2px' }}>
+                                {formatDate(date)}
+                              </Tag>
+                            ))}
+                          </div>
+                        </div>
+                      ),
+                      rowExpandable: (record) => record.transactionDates && record.transactionDates.length > 0,
+                    }}
+                  />
+                ),
+              },
+              {
+                key: 'chart',
+                label: (
+                  <span>
+                    <BarChartOutlined />
+                    Chart View
+                  </span>
+                ),
+                children: (
+                  <RecurringTransactionsChart data={recurringTransactions} />
+                ),
+              },
+            ]}
           />
         </>
       )}
