@@ -5,6 +5,7 @@ import { dashboardAPI, formatCurrency } from '../services/api';
 import ExpenseChart from './charts/ExpenseChart';
 import IncomeChart from './charts/IncomeChart';
 import MonthlyTrendChart from './charts/MonthlyTrendChart';
+import RecurringTransactions from './RecurringTransactions';
 import moment from 'moment';
 
 const { RangePicker } = DatePicker;
@@ -201,6 +202,12 @@ const Dashboard = () => {
           <Card title="Monthly Trends" className="chart-container">
             <MonthlyTrendChart data={summary?.monthlyTrends || []} />
           </Card>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        <Col span={24}>
+          <RecurringTransactions />
         </Col>
       </Row>
     </div>
