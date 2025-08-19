@@ -40,6 +40,13 @@ export const dashboardAPI = {
     api.get('/dashboard/average-monthly-expenses', { params: { months } }),
   
   getQuickStats: () => api.get('/dashboard/stats'),
+  
+  getExpenseHeatmap: (startDate, endDate) => {
+    const params = {};
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
+    return api.get('/dashboard/expense-heatmap', { params });
+  },
 };
 
 // File Upload API

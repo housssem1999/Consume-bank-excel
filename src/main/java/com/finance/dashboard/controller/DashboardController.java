@@ -2,6 +2,7 @@ package com.finance.dashboard.controller;
 
 import com.finance.dashboard.dto.CategorySummaryDto;
 import com.finance.dashboard.dto.FinancialSummaryDto;
+import com.finance.dashboard.dto.HeatmapDataDto;
 import com.finance.dashboard.model.Transaction;
 import com.finance.dashboard.repository.TransactionRepository;
 import com.finance.dashboard.service.FinancialStatisticsService;
@@ -149,5 +150,22 @@ public class DashboardController {
         stats.put("totalTransactions", totalTransactions);
         
         return ResponseEntity.ok(stats);
+    }
+    
+    @GetMapping("/expense-heatmap")
+    public ResponseEntity<List<HeatmapDataDto>> getExpenseHeatmap(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        
+        List<HeatmapDataDto> heatmapData;
+        
+        if (startDate != null && endDate != null) {
+            heatmapData = financialStatisticsService.getExpenseHeatmapData(startDate, endDate);
+        } else {
+            // Default to last year
+            heatmapData = financialStatisticsService.getExpenseHeatmapDataLastYear();
+        }
+        
+        return ResponseEntity.ok(heatmapData);
     }
 }
