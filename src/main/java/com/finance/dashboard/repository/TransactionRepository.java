@@ -46,4 +46,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.date BETWEEN :startDate AND :endDate")
     Long countTransactionsBetweenDates(@Param("startDate") LocalDate startDate, 
                                       @Param("endDate") LocalDate endDate);
+    
+    @Query("SELECT t.category.name, DAYOFWEEK(t.date), SUM(t.amount) FROM Transaction t " +
+           "WHERE t.type = :type AND t.date BETWEEN :startDate AND :endDate " +
+           "GROUP BY t.category.name, DAYOFWEEK(t.date) " +
+           "ORDER BY t.category.name, DAYOFWEEK(t.date)")
+    List<Object[]> findExpenseHeatmapData(@Param("type") TransactionType type,
+                                         @Param("startDate") LocalDate startDate,
+                                         @Param("endDate") LocalDate endDate);
 }

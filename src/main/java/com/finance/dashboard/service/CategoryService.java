@@ -44,7 +44,13 @@ public class CategoryService {
             {"Healthcare", "Medical expenses, pharmacy, insurance", "#DDA0DD"},
             {"Education", "Books, courses, tuition", "#98D8C8"},
             {"Travel", "Hotels, flights, vacation expenses", "#F7DC6F"},
-            {"Income", "Salary, freelance, investments", "#82E0AA"},
+            // Income source categories for better breakdown
+            {"Salary", "Regular employment income, payroll", "#82E0AA"},
+            {"Freelance Income", "Freelance work, consulting, gig economy", "#7DCEA0"},
+            {"Investment Income", "Dividends, capital gains, investment returns", "#76D7C4"},
+            {"Interest Income", "Bank interest, savings interest", "#85C1E9"},
+            {"Bonus Income", "Bonuses, commissions, performance pay", "#F8C471"},
+            {"Other Income", "Miscellaneous income sources", "#D5A6BD"},
             {"Transfer", "Bank transfers, internal movements", "#AED6F1"},
             {"Other", "Miscellaneous expenses", "#D5DBDB"}
         };
@@ -118,13 +124,31 @@ public class CategoryService {
         categoryKeywords.put("health", "Healthcare");
         categoryKeywords.put("insurance", "Healthcare");
         
-        // Income keywords
-        categoryKeywords.put("salary", "Income");
-        categoryKeywords.put("payroll", "Income");
-        categoryKeywords.put("freelance", "Income");
-        categoryKeywords.put("dividend", "Income");
-        categoryKeywords.put("interest", "Income");
-        categoryKeywords.put("bonus", "Income");
+        // Income keywords - specific categorization for income sources breakdown
+        categoryKeywords.put("salary", "Salary");
+        categoryKeywords.put("payroll", "Salary");
+        categoryKeywords.put("wages", "Salary");
+        categoryKeywords.put("employment", "Salary");
+        
+        categoryKeywords.put("freelance", "Freelance Income");
+        categoryKeywords.put("consulting", "Freelance Income");
+        categoryKeywords.put("contractor", "Freelance Income");
+        categoryKeywords.put("gig", "Freelance Income");
+        
+        categoryKeywords.put("dividend", "Investment Income");
+        categoryKeywords.put("investment", "Investment Income");
+        categoryKeywords.put("capital gains", "Investment Income");
+        categoryKeywords.put("stocks", "Investment Income");
+        categoryKeywords.put("mutual fund", "Investment Income");
+        
+        categoryKeywords.put("interest", "Interest Income");
+        categoryKeywords.put("savings interest", "Interest Income");
+        categoryKeywords.put("bank interest", "Interest Income");
+        
+        categoryKeywords.put("bonus", "Bonus Income");
+        categoryKeywords.put("commission", "Bonus Income");
+        categoryKeywords.put("incentive", "Bonus Income");
+        categoryKeywords.put("performance", "Bonus Income");
         
         // Transfer keywords
         categoryKeywords.put("transfer", "Transfer");
