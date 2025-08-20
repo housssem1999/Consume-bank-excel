@@ -48,14 +48,15 @@ export const dashboardAPI = {
     if (startDate) params.startDate = startDate;
     if (endDate) params.endDate = endDate;
     return api.get('/dashboard/budget-comparison/period', { params });
-
+  },
+  
   getExpenseHeatmap: (startDate, endDate) => {
     const params = {};
     if (startDate) params.startDate = startDate;
     if (endDate) params.endDate = endDate;
     return api.get('/dashboard/expense-heatmap', { params });
   },
-};
+};  
 
 // File Upload API
 export const uploadAPI = {

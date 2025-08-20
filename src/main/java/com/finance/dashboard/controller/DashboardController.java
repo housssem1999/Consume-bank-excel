@@ -166,6 +166,7 @@ public class DashboardController {
         
         List<BudgetComparisonDto> budgetComparison = financialStatisticsService.getBudgetComparisonForPeriod(startDate, endDate);
         return ResponseEntity.ok(budgetComparison);
+    }
 
     @GetMapping("/expense-heatmap")
     public ResponseEntity<List<HeatmapDataDto>> getExpenseHeatmap(

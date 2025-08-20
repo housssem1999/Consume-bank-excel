@@ -230,6 +230,7 @@ public class FinancialStatisticsService {
         }
         
         return budgetComparisons;
+    }
 
     public List<HeatmapDataDto> getExpenseHeatmapData(LocalDate startDate, LocalDate endDate) {
         logger.info("Generating expense heatmap data from {} to {}", startDate, endDate);
