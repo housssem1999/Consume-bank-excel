@@ -6,6 +6,7 @@ import ExpenseChart from './charts/ExpenseChart';
 import IncomeChart from './charts/IncomeChart';
 import MonthlyTrendChart from './charts/MonthlyTrendChart';
 import SavingsRateChart from './charts/SavingsRateChart';
+import ExpenseHeatmapChart from './charts/ExpenseHeatmapChart';
 import moment from 'moment';
 
 const { RangePicker } = DatePicker;
@@ -14,6 +15,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [summary, setSummary] = useState(null);
+  const [heatmapData, setHeatmapData] = useState([]);
   const [dateRange, setDateRange] = useState([
     moment().startOf('year'),
     moment().endOf('year')
@@ -24,12 +26,19 @@ const Dashboard = () => {
       setLoading(true);
       setError(null);
       
-      const response = await dashboardAPI.getFinancialSummary(
-        startDate ? startDate.format('YYYY-MM-DD') : null,
-        endDate ? endDate.format('YYYY-MM-DD') : null
-      );
+      const [summaryResponse, heatmapResponse] = await Promise.all([
+        dashboardAPI.getFinancialSummary(
+          startDate ? startDate.format('YYYY-MM-DD') : null,
+          endDate ? endDate.format('YYYY-MM-DD') : null
+        ),
+        dashboardAPI.getExpenseHeatmap(
+          startDate ? startDate.format('YYYY-MM-DD') : null,
+          endDate ? endDate.format('YYYY-MM-DD') : null
+        )
+      ]);
       
-      setSummary(response.data);
+      setSummary(summaryResponse.data);
+      setHeatmapData(heatmapResponse.data);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
       setError('Failed to load dashboard data. Please try again.');
@@ -209,6 +218,14 @@ const Dashboard = () => {
         <Col span={24}>
           <Card title="Savings Rate Over Time" className="chart-container">
             <SavingsRateChart data={summary?.monthlyTrends || []} />
+          </Card>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        <Col span={24}>
+          <Card title="Expense Heatmap by Day of Week" className="chart-container">
+            <ExpenseHeatmapChart data={heatmapData} />
           </Card>
         </Col>
       </Row>

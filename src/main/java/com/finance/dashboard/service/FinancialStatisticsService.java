@@ -2,6 +2,7 @@ package com.finance.dashboard.service;
 
 import com.finance.dashboard.dto.CategorySummaryDto;
 import com.finance.dashboard.dto.FinancialSummaryDto;
+import com.finance.dashboard.dto.HeatmapDataDto;
 import com.finance.dashboard.dto.MonthlyTrendDto;
 import com.finance.dashboard.model.TransactionType;
 import com.finance.dashboard.repository.TransactionRepository;
@@ -183,5 +184,43 @@ public class FinancialStatisticsService {
         
         BigDecimal totalExpenses = getTotalByType(TransactionType.EXPENSE, startDate, endDate);
         return totalExpenses.abs().divide(BigDecimal.valueOf(months), 2, RoundingMode.HALF_UP);
+    }
+    
+    public List<HeatmapDataDto> getExpenseHeatmapData(LocalDate startDate, LocalDate endDate) {
+        logger.info("Generating expense heatmap data from {} to {}", startDate, endDate);
+        
+        List<Object[]> results = transactionRepository.findExpenseHeatmapData(TransactionType.EXPENSE, startDate, endDate);
+        List<HeatmapDataDto> heatmapData = new ArrayList<>();
+        
+        // Map to convert MySQL DAYOFWEEK values (1=Sunday, 2=Monday, ..., 7=Saturday) to day names
+        Map<Integer, String> dayMap = new HashMap<>();
+        dayMap.put(1, "Sunday");
+        dayMap.put(2, "Monday");
+        dayMap.put(3, "Tuesday");
+        dayMap.put(4, "Wednesday");
+        dayMap.put(5, "Thursday");
+        dayMap.put(6, "Friday");
+        dayMap.put(7, "Saturday");
+        
+        for (Object[] result : results) {
+            String categoryName = (String) result[0];
+            Integer dayOfWeekNum = (Integer) result[1];
+            BigDecimal amount = (BigDecimal) result[2];
+            
+            String dayOfWeek = dayMap.get(dayOfWeekNum);
+            if (dayOfWeek != null) {
+                // Ensure amount is positive for heatmap display
+                BigDecimal positiveAmount = amount.abs();
+                heatmapData.add(new HeatmapDataDto(categoryName, dayOfWeek, positiveAmount));
+            }
+        }
+        
+        return heatmapData;
+    }
+    
+    public List<HeatmapDataDto> getExpenseHeatmapDataLastYear() {
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusYears(1);
+        return getExpenseHeatmapData(startDate, endDate);
     }
 }
