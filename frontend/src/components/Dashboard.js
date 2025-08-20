@@ -1,20 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Statistic, Spin, Alert, DatePicker, Button } from 'antd';
+import { Row, Col, Card, Statistic, Spin, Alert, DatePicker, Button, Tabs } from 'antd';
 import { ArrowUpOutlined, ArrowDownOutlined, DollarOutlined, TransactionOutlined } from '@ant-design/icons';
 import { dashboardAPI, formatCurrency } from '../services/api';
 import ExpenseChart from './charts/ExpenseChart';
 import IncomeChart from './charts/IncomeChart';
 import MonthlyTrendChart from './charts/MonthlyTrendChart';
 import SavingsRateChart from './charts/SavingsRateChart';
+import BudgetComparisonChart from './charts/BudgetComparisonChart';
+import BudgetManager from './BudgetManager';
 import ExpenseHeatmapChart from './charts/ExpenseHeatmapChart';
 import moment from 'moment';
 
 const { RangePicker } = DatePicker;
+const { TabPane } = Tabs;
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [summary, setSummary] = useState(null);
+  const [budgetData, setBudgetData] = useState([]);
+  const [budgetLoading, setBudgetLoading] = useState(false);
   const [heatmapData, setHeatmapData] = useState([]);
   const [dateRange, setDateRange] = useState([
     moment().startOf('year'),
@@ -47,15 +52,44 @@ const Dashboard = () => {
     }
   };
 
+  const fetchBudgetData = async (startDate, endDate) => {
+    try {
+      setBudgetLoading(true);
+      let response;
+      
+      if (startDate && endDate) {
+        response = await dashboardAPI.getBudgetComparisonForPeriod(
+          startDate.format('YYYY-MM-DD'),
+          endDate.format('YYYY-MM-DD')
+        );
+      } else {
+        response = await dashboardAPI.getBudgetComparison();
+      }
+      
+      setBudgetData(response.data);
+    } catch (err) {
+      console.error('Error fetching budget data:', err);
+    } finally {
+      setBudgetLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchDashboardData(dateRange[0], dateRange[1]);
+    fetchBudgetData(dateRange[0], dateRange[1]);
   }, []);
 
   const handleDateRangeChange = (dates) => {
     setDateRange(dates);
     if (dates && dates.length === 2) {
       fetchDashboardData(dates[0], dates[1]);
+      fetchBudgetData(dates[0], dates[1]);
     }
+  };
+
+  const handleBudgetUpdate = () => {
+    // Refresh budget data when budgets are updated
+    fetchBudgetData(dateRange[0], dateRange[1]);
   };
 
   const handleQuickFilter = (period) => {
@@ -84,6 +118,7 @@ const Dashboard = () => {
     
     setDateRange([startDate, endDate]);
     fetchDashboardData(startDate, endDate);
+    fetchBudgetData(startDate, endDate);
   };
 
   if (loading) {
@@ -221,6 +256,22 @@ const Dashboard = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* Budget Section */}
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        <Col span={24}>
+          <Tabs defaultActiveKey="comparison" type="card">
+            <TabPane tab="Budget vs Actual" key="comparison">
+              <Card title="Budget vs Actual Spending" className="chart-container">
+                <Spin spinning={budgetLoading}>
+                  <BudgetComparisonChart data={budgetData} />
+                </Spin>
+              </Card>
+            </TabPane>
+            <TabPane tab="Budget Management" key="management">
+              <BudgetManager onBudgetUpdate={handleBudgetUpdate} />
+            </TabPane>
+          </Tabs>
 
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col span={24}>

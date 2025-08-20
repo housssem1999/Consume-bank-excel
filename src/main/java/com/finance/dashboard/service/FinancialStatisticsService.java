@@ -1,10 +1,13 @@
 package com.finance.dashboard.service;
 
+import com.finance.dashboard.dto.BudgetComparisonDto;
 import com.finance.dashboard.dto.CategorySummaryDto;
 import com.finance.dashboard.dto.FinancialSummaryDto;
 import com.finance.dashboard.dto.HeatmapDataDto;
 import com.finance.dashboard.dto.MonthlyTrendDto;
+import com.finance.dashboard.model.Category;
 import com.finance.dashboard.model.TransactionType;
+import com.finance.dashboard.repository.CategoryRepository;
 import com.finance.dashboard.repository.TransactionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,9 +30,13 @@ public class FinancialStatisticsService {
     
     @Autowired
     private final TransactionRepository transactionRepository;
+    
+    @Autowired
+    private final CategoryRepository categoryRepository;
 
-    public FinancialStatisticsService(TransactionRepository transactionRepository) {
+    public FinancialStatisticsService(TransactionRepository transactionRepository, CategoryRepository categoryRepository) {
         this.transactionRepository = transactionRepository;
+        this.categoryRepository = categoryRepository;
     }
     
     public FinancialSummaryDto getFinancialSummary(LocalDate startDate, LocalDate endDate) {
@@ -186,6 +193,44 @@ public class FinancialStatisticsService {
         return totalExpenses.abs().divide(BigDecimal.valueOf(months), 2, RoundingMode.HALF_UP);
     }
     
+    public List<BudgetComparisonDto> getBudgetComparison() {
+        // Get current month data
+        YearMonth currentMonth = YearMonth.now();
+        LocalDate startDate = currentMonth.atDay(1);
+        LocalDate endDate = currentMonth.atEndOfMonth();
+        
+        return getBudgetComparisonForPeriod(startDate, endDate);
+    }
+    
+    public List<BudgetComparisonDto> getBudgetComparisonForPeriod(LocalDate startDate, LocalDate endDate) {
+        List<BudgetComparisonDto> budgetComparisons = new ArrayList<>();
+        
+        // Get all categories
+        List<Category> categories = categoryRepository.findAll();
+        
+        // Get actual spending for the period by category
+        List<CategorySummaryDto> actualSpending = getCategorySummary(TransactionType.EXPENSE, startDate, endDate);
+        Map<String, BigDecimal> actualSpendingMap = new HashMap<>();
+        for (CategorySummaryDto spending : actualSpending) {
+            actualSpendingMap.put(spending.getCategoryName(), spending.getTotalAmount().abs());
+        }
+        
+        // Create budget comparison for each category with a budget
+        for (Category category : categories) {
+            if (category.getMonthlyBudget() != null && category.getMonthlyBudget().compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal actualAmount = actualSpendingMap.getOrDefault(category.getName(), BigDecimal.ZERO);
+                BudgetComparisonDto comparison = new BudgetComparisonDto(
+                    category.getName(),
+                    category.getMonthlyBudget(),
+                    actualAmount,
+                    category.getColor()
+                );
+                budgetComparisons.add(comparison);
+            }
+        }
+        
+        return budgetComparisons;
+
     public List<HeatmapDataDto> getExpenseHeatmapData(LocalDate startDate, LocalDate endDate) {
         logger.info("Generating expense heatmap data from {} to {}", startDate, endDate);
         

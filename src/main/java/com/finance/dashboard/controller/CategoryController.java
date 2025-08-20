@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,6 +95,50 @@ public class CategoryController {
         
         public void setColor(String color) {
             this.color = color;
+        }
+    }
+    
+    @PutMapping("/{id}/budget")
+    public ResponseEntity<Map<String, Object>> updateCategoryBudget(
+            @PathVariable Long id,
+            @RequestBody BudgetUpdateRequest request) {
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            Optional<Category> categoryOpt = categoryService.getCategoryById(id);
+            if (categoryOpt.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Category not found");
+                return ResponseEntity.notFound().build();
+            }
+            
+            Category category = categoryOpt.get();
+            category.setMonthlyBudget(request.getMonthlyBudget());
+            Category updatedCategory = categoryService.saveCategory(category);
+            
+            response.put("success", true);
+            response.put("message", "Budget updated successfully");
+            response.put("category", updatedCategory);
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error updating budget: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+    
+    // Inner class for budget update request
+    public static class BudgetUpdateRequest {
+        private BigDecimal monthlyBudget;
+        
+        public BigDecimal getMonthlyBudget() {
+            return monthlyBudget;
+        }
+        
+        public void setMonthlyBudget(BigDecimal monthlyBudget) {
+            this.monthlyBudget = monthlyBudget;
         }
     }
 }

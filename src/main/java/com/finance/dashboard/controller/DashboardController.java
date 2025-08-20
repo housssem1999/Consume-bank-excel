@@ -1,5 +1,6 @@
 package com.finance.dashboard.controller;
 
+import com.finance.dashboard.dto.BudgetComparisonDto;
 import com.finance.dashboard.dto.CategorySummaryDto;
 import com.finance.dashboard.dto.FinancialSummaryDto;
 import com.finance.dashboard.dto.HeatmapDataDto;
@@ -152,6 +153,20 @@ public class DashboardController {
         return ResponseEntity.ok(stats);
     }
     
+    @GetMapping("/budget-comparison")
+    public ResponseEntity<List<BudgetComparisonDto>> getBudgetComparison() {
+        List<BudgetComparisonDto> budgetComparison = financialStatisticsService.getBudgetComparison();
+        return ResponseEntity.ok(budgetComparison);
+    }
+    
+    @GetMapping("/budget-comparison/period")
+    public ResponseEntity<List<BudgetComparisonDto>> getBudgetComparisonForPeriod(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        
+        List<BudgetComparisonDto> budgetComparison = financialStatisticsService.getBudgetComparisonForPeriod(startDate, endDate);
+        return ResponseEntity.ok(budgetComparison);
+
     @GetMapping("/expense-heatmap")
     public ResponseEntity<List<HeatmapDataDto>> getExpenseHeatmap(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
