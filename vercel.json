@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "name": "finance-dashboard-frontend",
+  "buildCommand": "cd frontend && CI=false npm run build",
+  "outputDirectory": "frontend/build",
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "env": {
+    "CI": "false",
+    "NODE_ENV": "production",
+    "REACT_APP_API_URL": "@react_app_api_url"
+  },
+  "build": {
+    "env": {
+      "CI": "false"
+    }
+  }
+}

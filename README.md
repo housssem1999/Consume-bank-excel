@@ -171,18 +171,66 @@ The backend is configured to allow requests from `http://localhost:3000`. Update
 
 ## 🚀 Deployment
 
-### Backend Deployment
+The application can be deployed using various free platforms available through GitHub Student Pack:
+
+### Quick Deployment Options
+
+1. **Vercel + Railway** (Recommended)
+   - Frontend: Vercel (Free)
+   - Backend: Railway ($5/month credit for students)
+   - Database: PostgreSQL on Railway
+
+2. **Heroku** (Full Stack)
+   - Heroku (Free tier + $13/month student credits)
+   - PostgreSQL addon
+
+3. **Netlify + Render**
+   - Frontend: Netlify (Free)
+   - Backend: Render (Free tier)
+
+### Quick Start Scripts
+
 ```bash
-mvn clean package
-java -jar target/finance-dashboard-0.0.1-SNAPSHOT.jar
+# Setup local development
+./scripts/setup-dev.sh
+
+# Deploy to Railway (backend)
+./scripts/deploy-railway.sh
+
+# Deploy to Heroku (full stack)
+./scripts/deploy-heroku.sh your-app-name
 ```
 
-### Frontend Deployment
-```bash
-cd frontend
-npm run build
-# Deploy the build/ directory to your web server
+### Environment Variables for Production
+
+**Backend**:
+```env
+SPRING_PROFILES_ACTIVE=prod
+DATABASE_URL=postgresql://user:pass@host:port/db
+CORS_ALLOWED_ORIGINS=https://your-frontend-domain.com
 ```
+
+**Frontend**:
+```env
+REACT_APP_API_URL=https://your-backend-domain.com
+CI=false
+```
+
+📚 **See [DEPLOYMENT.md](DEPLOYMENT.md) for complete deployment guide**
+
+### Database Configuration
+Edit `src/main/resources/application.yml` to change database settings:
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:h2:mem:financedb  # Change for production DB
+    username: sa
+    password: password
+```
+
+### CORS Configuration
+CORS is configured globally via `CorsConfig.java` and can be customized using the `CORS_ALLOWED_ORIGINS` environment variable.
 
 ## 🤝 Contributing
 
