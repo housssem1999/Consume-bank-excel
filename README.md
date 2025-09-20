@@ -171,18 +171,78 @@ The backend is configured to allow requests from `http://localhost:3000`. Update
 
 ## 🚀 Deployment
 
-### Backend Deployment
+Deploy your Personal Finance Dashboard using **Vercel (Frontend) + Railway (Backend)** - the recommended deployment option leveraging free resources from GitHub Student Pack.
+
+### Quick Deployment: Vercel + Railway
+
+**Frontend: Vercel (Free)**
+- 100GB bandwidth/month
+- Unlimited sites and custom domains
+- Automatic HTTPS and global CDN
+
+**Backend: Railway ($5/month student credit)**
+- 500 hours runtime with 1GB RAM
+- PostgreSQL database included
+- Zero-cost with GitHub Student Pack
+
+### 🚀 Quick Start Scripts
+
 ```bash
-mvn clean package
-java -jar target/finance-dashboard-0.0.1-SNAPSHOT.jar
+# Setup local development
+./scripts/setup-dev.sh
+
+# Deploy backend to Railway
+./scripts/deploy-railway.sh
 ```
 
-### Frontend Deployment
-```bash
-cd frontend
-npm run build
-# Deploy the build/ directory to your web server
+### 📋 Manual Deployment Steps
+
+1. **Deploy Backend to Railway**:
+   - Sign up at [railway.app](https://railway.app)
+   - Connect GitHub repository
+   - Add PostgreSQL database
+   - Set environment variables:
+     ```env
+     SPRING_PROFILES_ACTIVE=prod
+     CORS_ALLOWED_ORIGINS=https://your-app.vercel.app
+     ```
+
+2. **Deploy Frontend to Vercel**:
+   - Sign up at [vercel.com](https://vercel.com)
+   - Import GitHub repository
+   - Configure build settings:
+     - Build Command: `cd frontend && CI=false npm run build`
+     - Output Directory: `frontend/build`
+   - Set environment variables:
+     ```env
+     CI=false
+     REACT_APP_API_URL=https://your-backend.railway.app
+     ```
+
+### 💰 Cost: $0/month
+All costs covered by GitHub Student Pack benefits:
+- **Vercel**: Free tier
+- **Railway**: $5/month credit for students
+- **PostgreSQL**: Included with Railway
+
+📚 **See [DEPLOYMENT.md](DEPLOYMENT.md) for complete deployment guide**  
+⚡ **See [QUICK_DEPLOY.md](QUICK_DEPLOY.md) for 15-minute setup**
+
+## 🔧 Configuration
+
+### Database Configuration
+Edit `src/main/resources/application.yml` to change database settings:
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:h2:mem:financedb  # Change for production DB
+    username: sa
+    password: password
 ```
+
+### CORS Configuration
+CORS is configured globally via `CorsConfig.java` and can be customized using the `CORS_ALLOWED_ORIGINS` environment variable.
 
 ## 🤝 Contributing
 
