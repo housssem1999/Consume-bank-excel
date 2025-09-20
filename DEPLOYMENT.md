@@ -172,6 +172,9 @@ echo ".env.production" >> .gitignore
    - Railway automatically sets DATABASE_URL
    - Check Railway logs for connection errors
    - Ensure PostgreSQL service is running
+   - **✅ Fixed**: Railway URL format conversion now handled automatically
+     - Railway provides: `postgresql://user:pass@host:port/db`
+     - Application converts to: `jdbc:postgresql://host:port/db`
 
 3. **Frontend Build Failures**:
    ```bash

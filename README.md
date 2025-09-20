@@ -166,6 +166,8 @@ spring:
     password: password
 ```
 
+**✅ Railway PostgreSQL**: The application automatically handles Railway's DATABASE_URL format conversion. See [RAILWAY_FIX.md](RAILWAY_FIX.md) for details.
+
 ### CORS Configuration
 The backend is configured to allow requests from `http://localhost:3000`. Update the `@CrossOrigin` annotations in controllers for production.
 
