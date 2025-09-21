@@ -74,13 +74,13 @@ Update `vercel.json` with proper routing configuration:
 ```env
 CI=false
 REACT_APP_API_URL=https://your-backend.railway.app
-REACT_APP_ENVIRONMENT=production
 ```
 
 **Important Notes:**
 - Set `REACT_APP_API_URL` to your actual backend URL
-- Always use `CI=false` to avoid build failures from ESLint warnings
+- Always use `CI=false` to avoid build failures from ESLint warnings  
 - Don't include sensitive values in `.env.production` file
+- Vercel automatically sets NODE_ENV=production in production
 
 ### 🛠️ Build Configuration
 
@@ -88,6 +88,8 @@ REACT_APP_ENVIRONMENT=production
 - **Build Command**: `cd frontend && CI=false npm run build`
 - **Output Directory**: `frontend/build`
 - **Install Command**: `cd frontend && npm install`
+
+**Note**: Node.js version should be set to 18.x or 20.x in Vercel for best compatibility.
 
 ### 📋 Deployment Checklist
 
@@ -127,11 +129,21 @@ If deployment fails:
 2. **Quick Fix Template:**
    ```json
    {
-     "version": 2,
+     "buildCommand": "cd frontend && CI=false npm run build",
+     "outputDirectory": "frontend/build",
      "routes": [
        { "src": "/static/(.*)", "dest": "/static/$1" },
        { "src": "/(.*)", "dest": "/index.html" }
      ]
+   }
+   ```
+
+3. **Minimal Working Configuration:**
+   If all else fails, use this minimal `vercel.json`:
+   ```json
+   {
+     "buildCommand": "cd frontend && CI=false npm run build",
+     "outputDirectory": "frontend/build"
    }
    ```
 
