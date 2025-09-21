@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Layout, Menu } from 'antd';
 import { DashboardOutlined, UploadOutlined, BarChartOutlined, SettingOutlined } from '@ant-design/icons';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { Analytics } from '@vercel/analytics/react';
 import Dashboard from './components/Dashboard';
 import FileUpload from './components/FileUpload';
 import TransactionList from './components/TransactionList';
@@ -35,6 +36,7 @@ function App() {
   return (
     <Router>
       <SpeedInsights />
+      <Analytics />
       <Layout style={{ minHeight: '100vh' }}>
         <Sider
           breakpoint="lg"
