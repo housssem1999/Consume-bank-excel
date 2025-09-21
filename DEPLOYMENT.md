@@ -159,27 +159,35 @@ echo ".env.production" >> .gitignore
 
 ## 🐛 Troubleshooting
 
+### Quick Reference
+For detailed Vercel deployment issues, see [VERCEL_TROUBLESHOOTING.md](VERCEL_TROUBLESHOOTING.md).
+
 ### Common Issues
 
-1. **CORS Errors**:
+1. **White Screen / JavaScript Syntax Errors on Vercel**:
+   - **Symptom**: "Uncaught SyntaxError: Unexpected token '<'"
+   - **Cause**: Incorrect routing in `vercel.json`
+   - **Solution**: See [VERCEL_TROUBLESHOOTING.md](VERCEL_TROUBLESHOOTING.md#-uncaught-syntaxerror-unexpected-token--error)
+
+2. **CORS Errors**:
    ```bash
    # Update CORS_ALLOWED_ORIGINS in Railway
    # Make sure it matches your exact Vercel URL
    CORS_ALLOWED_ORIGINS=https://your-exact-vercel-url.vercel.app
    ```
 
-2. **Database Connection Issues**:
+3. **Database Connection Issues**:
    - Railway automatically sets DATABASE_URL
    - Check Railway logs for connection errors
    - Ensure PostgreSQL service is running
 
-3. **Frontend Build Failures**:
+4. **Frontend Build Failures**:
    ```bash
    # Always use CI=false for React builds
    CI=false npm run build
    ```
 
-4. **API Not Reachable**:
+5. **API Not Reachable**:
    - Verify REACT_APP_API_URL is set correctly
    - Check Railway service is running
    - Test API endpoint directly: `https://your-backend.railway.app/api/categories`
