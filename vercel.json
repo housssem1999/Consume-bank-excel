@@ -11,8 +11,7 @@
   ],
   "env": {
     "CI": "false",
-    "NODE_ENV": "production",
-    "REACT_APP_API_URL": "@react_app_api_url"
+    "NODE_ENV": "production"
   },
   "build": {
     "env": {
