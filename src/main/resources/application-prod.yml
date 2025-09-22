@@ -8,6 +8,10 @@ spring:
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:}
   
+  h2:
+    console:
+      enabled: false  # Disable H2 console in production
+  
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
