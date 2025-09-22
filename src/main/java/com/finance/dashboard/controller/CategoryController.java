@@ -1,10 +1,13 @@
 package com.finance.dashboard.controller;
 
 import com.finance.dashboard.model.Category;
+import com.finance.dashboard.model.User;
 import com.finance.dashboard.service.CategoryService;
+import com.finance.dashboard.util.SecurityUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -43,10 +46,12 @@ public class CategoryController {
         Map<String, Object> response = new HashMap<>();
         
         try {
+            User currentUser = SecurityUtil.getCurrentUser();
             Category category = categoryService.createCategory(
                 request.getName(), 
                 request.getDescription(), 
-                request.getColor()
+                request.getColor(),
+                currentUser
             );
             
             response.put("success", true);

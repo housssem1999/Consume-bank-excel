@@ -1,7 +1,9 @@
 package com.finance.dashboard.service;
 
 import com.finance.dashboard.model.Category;
+import com.finance.dashboard.model.User;
 import com.finance.dashboard.repository.CategoryRepository;
+import com.finance.dashboard.util.SecurityUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,8 +60,9 @@ public class CategoryService {
         for (String[] categoryData : defaultCategories) {
             if (!categoryRepository.existsByName(categoryData[0])) {
                 Category category = new Category(categoryData[0], categoryData[1], categoryData[2]);
+                // System categories have user = null
                 categoryRepository.save(category);
-                logger.info("Created default category: {}", categoryData[0]);
+                logger.info("Created default system category: {}", categoryData[0]);
             }
         }
         
@@ -157,36 +160,80 @@ public class CategoryService {
         categoryKeywords.put("deposit", "Transfer");
     }
     
-    public Category categorizeTransaction(String description) {
+    public Category categorizeTransaction(String description, User user) {
         if (description == null || description.trim().isEmpty()) {
-            return defaultCategory;
+            return getDefaultCategoryForUser(user);
         }
         
         String lowerDescription = description.toLowerCase();
         
-        // Check for keyword matches
+        // Check for keyword matches in available categories for the user
+        List<Category> availableCategories = getAvailableCategoriesForUser(user);
+        
         for (Map.Entry<String, String> entry : categoryKeywords.entrySet()) {
             if (lowerDescription.contains(entry.getKey())) {
-                Optional<Category> category = categoryRepository.findByName(entry.getValue());
+                Optional<Category> category = availableCategories.stream()
+                    .filter(c -> c.getName().equals(entry.getValue()))
+                    .findFirst();
                 if (category.isPresent()) {
                     return category.get();
                 }
             }
         }
         
-        return defaultCategory;
+        return getDefaultCategoryForUser(user);
     }
     
     public List<Category> getAllCategories() {
+        if (SecurityUtil.isAuthenticated()) {
+            User currentUser = SecurityUtil.getCurrentUser();
+            return getAvailableCategoriesForUser(currentUser);
+        }
         return categoryRepository.findAll();
     }
     
-    public Category createCategory(String name, String description, String color) {
-        if (categoryRepository.existsByName(name)) {
+    public List<Category> getAvailableCategoriesForUser(User user) {
+        if (user == null) {
+            return categoryRepository.findSystemCategories();
+        }
+        return categoryRepository.findAvailableCategoriesForUser(user);
+    }
+    
+    public List<Category> getUserCategories(User user) {
+        return categoryRepository.findByUser(user);
+    }
+    
+    public List<Category> getSystemCategories() {
+        return categoryRepository.findSystemCategories();
+    }
+    
+    private Category getDefaultCategoryForUser(User user) {
+        // First try to find "Other" in available categories for user
+        List<Category> availableCategories = getAvailableCategoriesForUser(user);
+        Optional<Category> otherCategory = availableCategories.stream()
+            .filter(c -> "Other".equals(c.getName()))
+            .findFirst();
+        
+        if (otherCategory.isPresent()) {
+            return otherCategory.get();
+        }
+        
+        // Fallback to the system default category
+        return defaultCategory;
+    }
+    
+    public Category createCategory(String name, String description, String color, User user) {
+        // Check if category name already exists for the user (system + user categories)
+        List<Category> availableCategories = getAvailableCategoriesForUser(user);
+        boolean nameExists = availableCategories.stream()
+            .anyMatch(c -> c.getName().equalsIgnoreCase(name));
+        
+        if (nameExists) {
             throw new IllegalArgumentException("Category with name '" + name + "' already exists");
         }
         
         Category category = new Category(name, description, color);
+        category.setUser(user); // Associate with the user
         return categoryRepository.save(category);
     }
     

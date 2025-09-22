@@ -17,6 +17,11 @@ import java.util.List;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
     
+    // User-aware methods
+    Page<Transaction> findByUser(User user, Pageable pageable);
+    
+    Long countByUser(User user);
+    
     Page<Transaction> findByUserAndDateBetween(User user, LocalDate startDate, LocalDate endDate, Pageable pageable);
     
     List<Transaction> findByUserAndType(User user, TransactionType type);
