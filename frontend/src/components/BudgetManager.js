@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, InputNumber, Button, message, Space } from 'antd';
+import { Card, Table, InputNumber, message, Space } from 'antd';
 import { categoriesAPI } from '../services/api';
 
 const BudgetManager = ({ onBudgetUpdate }) => {
