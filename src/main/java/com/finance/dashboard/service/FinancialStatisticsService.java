@@ -235,18 +235,19 @@ public class FinancialStatisticsService {
     public List<HeatmapDataDto> getExpenseHeatmapData(LocalDate startDate, LocalDate endDate) {
         logger.info("Generating expense heatmap data from {} to {}", startDate, endDate);
         
-        List<Object[]> results = transactionRepository.findExpenseHeatmapData(TransactionType.EXPENSE, startDate, endDate);
+        List<Object[]> results = transactionRepository.findExpenseHeatmapData(TransactionType.EXPENSE.name(), startDate, endDate);
         List<HeatmapDataDto> heatmapData = new ArrayList<>();
         
-        // Map to convert MySQL DAYOFWEEK values (1=Sunday, 2=Monday, ..., 7=Saturday) to day names
+        // Map to convert PostgreSQL EXTRACT(DOW) values (0=Sunday, 1=Monday, ..., 6=Saturday) to day names
+        // This is compatible with both PostgreSQL and H2 when using EXTRACT(DOW FROM date)
         Map<Integer, String> dayMap = new HashMap<>();
-        dayMap.put(1, "Sunday");
-        dayMap.put(2, "Monday");
-        dayMap.put(3, "Tuesday");
-        dayMap.put(4, "Wednesday");
-        dayMap.put(5, "Thursday");
-        dayMap.put(6, "Friday");
-        dayMap.put(7, "Saturday");
+        dayMap.put(0, "Sunday");
+        dayMap.put(1, "Monday");
+        dayMap.put(2, "Tuesday");
+        dayMap.put(3, "Wednesday");
+        dayMap.put(4, "Thursday");
+        dayMap.put(5, "Friday");
+        dayMap.put(6, "Saturday");
         
         for (Object[] result : results) {
             String categoryName = (String) result[0];
