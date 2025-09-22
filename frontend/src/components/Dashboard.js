@@ -257,9 +257,9 @@ const Dashboard = () => {
         </Col>
       </Row>
 
-      {/* Budget Section and Expense Heatmap */}
-      <Row gutter={[16, 16]} style={{ marginTop: 16, alignItems: 'flex-end' }}>
-        <Col xs={24} lg={12}>
+      {/* Budget Section */}
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        <Col span={24}>
           <Tabs defaultActiveKey="comparison" type="card">
             <TabPane tab="Budget vs Actual" key="comparison">
               <Card title="Budget vs Actual Spending" className="chart-container">
@@ -273,7 +273,10 @@ const Dashboard = () => {
             </TabPane>
           </Tabs>
         </Col>
-        <Col xs={24} lg={12}>
+      </Row>
+
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        <Col span={24}>
           <Card title="Expense Heatmap by Day of Week" className="chart-container">
             <ExpenseHeatmapChart data={heatmapData} />
           </Card>
