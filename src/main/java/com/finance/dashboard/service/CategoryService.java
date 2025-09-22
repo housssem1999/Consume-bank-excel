@@ -201,4 +201,56 @@ public class CategoryService {
     public Category saveCategory(Category category) {
         return categoryRepository.save(category);
     }
+    
+    public Category updateCategory(Long id, String name, String description, String color) {
+        Optional<Category> categoryOpt = categoryRepository.findById(id);
+        if (categoryOpt.isEmpty()) {
+            throw new IllegalArgumentException("Category with id " + id + " not found");
+        }
+        
+        Category category = categoryOpt.get();
+        
+        // Check if name is being changed and if new name already exists
+        if (!category.getName().equals(name) && categoryRepository.existsByName(name)) {
+            throw new IllegalArgumentException("Category with name '" + name + "' already exists");
+        }
+        
+        category.setName(name);
+        category.setDescription(description);
+        category.setColor(color);
+        
+        return categoryRepository.save(category);
+    }
+    
+    public void deleteCategory(Long id) {
+        Optional<Category> categoryOpt = categoryRepository.findById(id);
+        if (categoryOpt.isEmpty()) {
+            throw new IllegalArgumentException("Category with id " + id + " not found");
+        }
+        
+        Category category = categoryOpt.get();
+        
+        // Prevent deletion of categories that have transactions
+        if (!category.getTransactions().isEmpty()) {
+            throw new IllegalArgumentException("Cannot delete category '" + category.getName() + 
+                "' because it has " + category.getTransactions().size() + " associated transactions. " +
+                "Please reassign or delete these transactions first.");
+        }
+        
+        // Prevent deletion of the default "Other" category
+        if ("Other".equals(category.getName())) {
+            throw new IllegalArgumentException("Cannot delete the default 'Other' category");
+        }
+        
+        categoryRepository.deleteById(id);
+        logger.info("Deleted category: {}", category.getName());
+    }
+    
+    public long getTransactionCount(Long categoryId) {
+        Optional<Category> categoryOpt = categoryRepository.findById(categoryId);
+        if (categoryOpt.isPresent()) {
+            return categoryOpt.get().getTransactions().size();
+        }
+        return 0;
+    }
 }
