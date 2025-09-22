@@ -31,6 +31,10 @@ public class Category {
     @JsonIgnore
     private List<Transaction> transactions = new ArrayList<>();
     
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user; // null for system default categories
+    
     // Constructors
     public Category() {}
     
@@ -88,6 +92,18 @@ public class Category {
     
     public void setMonthlyBudget(BigDecimal monthlyBudget) {
         this.monthlyBudget = monthlyBudget;
+    }
+    
+    public User getUser() {
+        return user;
+    }
+    
+    public void setUser(User user) {
+        this.user = user;
+    }
+    
+    public boolean isSystemCategory() {
+        return user == null;
     }
     
     @Override
