@@ -120,16 +120,18 @@ public class FinancialStatisticsService {
         Map<String, BigDecimal> expenseMap = new HashMap<>();
         
         for (Object[] result : incomeResults) {
-            Integer year = (Integer) result[0];
-            Integer month = (Integer) result[1];
+            // Handle both Integer and BigDecimal types for year/month (database compatibility)
+            Integer year = result[0] instanceof BigDecimal ? ((BigDecimal) result[0]).intValue() : (Integer) result[0];
+            Integer month = result[1] instanceof BigDecimal ? ((BigDecimal) result[1]).intValue() : (Integer) result[1];
             BigDecimal amount = (BigDecimal) result[2];
             String key = year + "-" + month;
             incomeMap.put(key, amount);
         }
         
         for (Object[] result : expenseResults) {
-            Integer year = (Integer) result[0];
-            Integer month = (Integer) result[1];
+            // Handle both Integer and BigDecimal types for year/month (database compatibility)
+            Integer year = result[0] instanceof BigDecimal ? ((BigDecimal) result[0]).intValue() : (Integer) result[0];
+            Integer month = result[1] instanceof BigDecimal ? ((BigDecimal) result[1]).intValue() : (Integer) result[1];
             BigDecimal amount = (BigDecimal) result[2];
             String key = year + "-" + month;
             expenseMap.put(key, amount);
@@ -251,7 +253,18 @@ public class FinancialStatisticsService {
         
         for (Object[] result : results) {
             String categoryName = (String) result[0];
-            Integer dayOfWeekNum = (Integer) result[1];
+            
+            // Handle both Integer and BigDecimal types for day of week (H2 database compatibility)
+            Integer dayOfWeekNum;
+            if (result[1] instanceof BigDecimal) {
+                dayOfWeekNum = ((BigDecimal) result[1]).intValue();
+            } else if (result[1] instanceof Integer) {
+                dayOfWeekNum = (Integer) result[1];
+            } else {
+                // Fallback for other numeric types
+                dayOfWeekNum = ((Number) result[1]).intValue();
+            }
+            
             BigDecimal amount = (BigDecimal) result[2];
             
             String dayOfWeek = dayMap.get(dayOfWeekNum);
