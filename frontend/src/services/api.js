@@ -82,6 +82,12 @@ export const categoriesAPI = {
   
   createCategory: (categoryData) => api.post('/categories', categoryData),
   
+  updateCategory: (id, categoryData) => api.put(`/categories/${id}`, categoryData),
+  
+  deleteCategory: (id) => api.delete(`/categories/${id}`),
+  
+  getCategoryTransactionCount: (id) => api.get(`/categories/${id}/transaction-count`),
+  
   updateCategoryBudget: (id, budgetData) => api.put(`/categories/${id}/budget`, budgetData),
 };
 
