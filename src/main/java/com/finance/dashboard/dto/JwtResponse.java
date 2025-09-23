@@ -1,6 +1,6 @@
 package com.finance.dashboard.dto;
 
-import com.finance.dashboard.model.User;
+import com.finance.dashboard.model.Role;
 
 public class JwtResponse {
     private String token;
@@ -10,10 +10,10 @@ public class JwtResponse {
     private String email;
     private String firstName;
     private String lastName;
-    private User.Role role;
+    private Role role;
 
     public JwtResponse(String accessToken, Long id, String username, String email, 
-                      String firstName, String lastName, User.Role role) {
+                      String firstName, String lastName, Role role) {
         this.token = accessToken;
         this.id = id;
         this.username = username;
@@ -79,11 +79,11 @@ public class JwtResponse {
         this.lastName = lastName;
     }
 
-    public User.Role getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(User.Role role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 }
