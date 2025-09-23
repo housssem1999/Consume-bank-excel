@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Typography, Space, Avatar, Divider, Button } from 'antd';
+import { Card, Typography, Space, Avatar, Divider, Button, message } from 'antd';
 import { 
   LinkedinOutlined, 
   GithubOutlined, 
