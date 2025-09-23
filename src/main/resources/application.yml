@@ -33,6 +33,8 @@ server:
 app:
   cors:
     allowed-origins: http://localhost:3000
+  jwtSecret: bXlTZWNyZXRLZXlGb3JGaW5hbmNlRGFzaGJvYXJkVmVyeVNlY3VyZUFuZExvbmdLZXlUaGF0SXNBdExlYXN0MjU2Qml0c0xvbmc=
+  jwtExpirationMs: 86400000
 
 logging:
   level:
