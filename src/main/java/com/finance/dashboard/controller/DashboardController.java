@@ -5,8 +5,10 @@ import com.finance.dashboard.dto.CategorySummaryDto;
 import com.finance.dashboard.dto.FinancialSummaryDto;
 import com.finance.dashboard.dto.HeatmapDataDto;
 import com.finance.dashboard.model.Transaction;
+import com.finance.dashboard.model.User;
 import com.finance.dashboard.repository.TransactionRepository;
 import com.finance.dashboard.service.FinancialStatisticsService;
+import com.finance.dashboard.util.SecurityUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -76,6 +78,8 @@ public class DashboardController {
             @RequestParam(required = false) String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
         
+        User currentUser = SecurityUtil.getCurrentUser();
+        
         Pageable pageable;
         if (sortBy != null && !sortBy.isEmpty()) {
             Sort.Direction direction = sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
@@ -88,9 +92,10 @@ public class DashboardController {
         Page<Transaction> transactionPage;
         
         if (startDate != null && endDate != null) {
-            transactionPage = transactionRepository.findByDateBetween(startDate, endDate, pageable);
+            transactionPage = transactionRepository.findByUserAndDateBetween(currentUser, startDate, endDate, pageable);
         } else {
-            transactionPage = transactionRepository.findAll(pageable);
+            // Get all transactions for the user with pagination
+            transactionPage = transactionRepository.findByUser(currentUser, pageable);
         }
         
         Map<String, Object> response = new HashMap<>();
@@ -126,6 +131,7 @@ public class DashboardController {
     
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getQuickStats() {
+        User currentUser = SecurityUtil.getCurrentUser();
         Map<String, Object> stats = new HashMap<>();
         
         // Get current month and year summaries
@@ -146,8 +152,8 @@ public class DashboardController {
             "transactions", currentYear.getTotalTransactions()
         ));
         
-        // Get total transactions count
-        long totalTransactions = transactionRepository.count();
+        // Get total transactions count for the user
+        long totalTransactions = transactionRepository.countByUser(currentUser);
         stats.put("totalTransactions", totalTransactions);
         
         return ResponseEntity.ok(stats);

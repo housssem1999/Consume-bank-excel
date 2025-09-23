@@ -34,6 +34,10 @@ public class Transaction {
     @JoinColumn(name = "category_id")
     private Category category;
     
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+    
     private String reference;
     
     // Constructors
@@ -101,6 +105,14 @@ public class Transaction {
     
     public void setReference(String reference) {
         this.reference = reference;
+    }
+    
+    public User getUser() {
+        return user;
+    }
+    
+    public void setUser(User user) {
+        this.user = user;
     }
     
     @Override

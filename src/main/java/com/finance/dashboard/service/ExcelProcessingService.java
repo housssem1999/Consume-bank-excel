@@ -3,8 +3,10 @@ package com.finance.dashboard.service;
 import com.finance.dashboard.model.Category;
 import com.finance.dashboard.model.Transaction;
 import com.finance.dashboard.model.TransactionType;
+import com.finance.dashboard.model.User;
 import com.finance.dashboard.repository.CategoryRepository;
 import com.finance.dashboard.repository.TransactionRepository;
+import com.finance.dashboard.util.SecurityUtil;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
@@ -37,7 +39,12 @@ public class ExcelProcessingService {
     }
 
     public List<Transaction> processExcelFile(MultipartFile file) throws IOException {
-        logger.info("Processing Excel file: {}", file.getOriginalFilename());
+        User currentUser = SecurityUtil.getCurrentUser();
+        return processExcelFile(file, currentUser);
+    }
+
+    public List<Transaction> processExcelFile(MultipartFile file, User user) throws IOException {
+        logger.info("Processing Excel file: {} for user: {}", file.getOriginalFilename(), user.getUsername());
         
         List<Transaction> transactions = new ArrayList<>();
         
@@ -54,7 +61,7 @@ public class ExcelProcessingService {
                 }
                 
                 try {
-                    Transaction transaction = parseRowToTransaction(row);
+                    Transaction transaction = parseRowToTransaction(row, user);
                     if (transaction != null) {
                         transactions.add(transaction);
                     }
@@ -66,12 +73,13 @@ public class ExcelProcessingService {
         
         // Save all transactions
         List<Transaction> savedTransactions = transactionRepository.saveAll(transactions);
-        logger.info("Successfully processed {} transactions from Excel file", savedTransactions.size());
+        logger.info("Successfully processed {} transactions from Excel file for user: {}", 
+                   savedTransactions.size(), user.getUsername());
         
         return savedTransactions;
     }
     
-    private Transaction parseRowToTransaction(Row row) {
+    private Transaction parseRowToTransaction(Row row, User user) {
         try {
             // Assuming Excel format: Date | Description | Amount | Reference
             // Adjust column indices based on your Excel format
@@ -116,9 +124,10 @@ public class ExcelProcessingService {
             // Create transaction
             Transaction transaction = new Transaction(date, description, amount, type);
             transaction.setReference(reference);
+            transaction.setUser(user); // Associate with the user
             
-            // Auto-categorize transaction
-            Category category = categoryService.categorizeTransaction(description);
+            // Auto-categorize transaction using user-aware categorization
+            Category category = categoryService.categorizeTransaction(description, user);
             transaction.setCategory(category);
             
             return transaction;

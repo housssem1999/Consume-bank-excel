@@ -7,8 +7,10 @@ import com.finance.dashboard.dto.HeatmapDataDto;
 import com.finance.dashboard.dto.MonthlyTrendDto;
 import com.finance.dashboard.model.Category;
 import com.finance.dashboard.model.TransactionType;
+import com.finance.dashboard.model.User;
 import com.finance.dashboard.repository.CategoryRepository;
 import com.finance.dashboard.repository.TransactionRepository;
+import com.finance.dashboard.util.SecurityUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,26 +42,31 @@ public class FinancialStatisticsService {
     }
     
     public FinancialSummaryDto getFinancialSummary(LocalDate startDate, LocalDate endDate) {
-        logger.info("Generating financial summary from {} to {}", startDate, endDate);
+        User currentUser = SecurityUtil.getCurrentUser();
+        return getFinancialSummaryForUser(currentUser, startDate, endDate);
+    }
+    
+    public FinancialSummaryDto getFinancialSummaryForUser(User user, LocalDate startDate, LocalDate endDate) {
+        logger.info("Generating financial summary from {} to {} for user: {}", startDate, endDate, user.getUsername());
         
         // Calculate totals
-        BigDecimal totalIncome = getTotalByType(TransactionType.INCOME, startDate, endDate);
-        BigDecimal totalExpenses = getTotalByType(TransactionType.EXPENSE, startDate, endDate);
+        BigDecimal totalIncome = getTotalByTypeForUser(user, TransactionType.INCOME, startDate, endDate);
+        BigDecimal totalExpenses = getTotalByTypeForUser(user, TransactionType.EXPENSE, startDate, endDate);
         // Ensure expenses are negative before calculating net income
         if (totalExpenses.compareTo(BigDecimal.ZERO) > 0) {
             totalExpenses = totalExpenses.negate();
         }
         BigDecimal netIncome = totalIncome.add(totalExpenses); // expenses are now guaranteed to be negative
-        Long totalTransactions = transactionRepository.countTransactionsBetweenDates(startDate, endDate);
+        Long totalTransactions = transactionRepository.countTransactionsByUserAndBetweenDates(user, startDate, endDate);
         
         FinancialSummaryDto summary = new FinancialSummaryDto(totalIncome, totalExpenses, netIncome, totalTransactions);
         
         // Add category breakdowns
-        summary.setExpensesByCategory(getCategorySummary(TransactionType.EXPENSE, startDate, endDate));
-        summary.setIncomeByCategory(getCategorySummary(TransactionType.INCOME, startDate, endDate));
+        summary.setExpensesByCategory(getCategorySummaryForUser(user, TransactionType.EXPENSE, startDate, endDate));
+        summary.setIncomeByCategory(getCategorySummaryForUser(user, TransactionType.INCOME, startDate, endDate));
         
         // Add monthly trends
-        summary.setMonthlyTrends(getMonthlyTrends());
+        summary.setMonthlyTrends(getMonthlyTrendsForUser(user));
         
         return summary;
     }
@@ -77,13 +84,13 @@ public class FinancialStatisticsService {
         return getFinancialSummary(startDate, endDate);
     }
     
-    private BigDecimal getTotalByType(TransactionType type, LocalDate startDate, LocalDate endDate) {
-        BigDecimal total = transactionRepository.sumAmountByTypeAndDateBetween(type, startDate, endDate);
+    private BigDecimal getTotalByTypeForUser(User user, TransactionType type, LocalDate startDate, LocalDate endDate) {
+        BigDecimal total = transactionRepository.sumAmountByUserAndTypeAndDateBetween(user, type, startDate, endDate);
         return total != null ? total : BigDecimal.ZERO;
     }
     
-    private List<CategorySummaryDto> getCategorySummary(TransactionType type, LocalDate startDate, LocalDate endDate) {
-        List<Object[]> results = transactionRepository.findCategoryTotalsByTypeAndDateBetween(type, startDate, endDate);
+    private List<CategorySummaryDto> getCategorySummaryForUser(User user, TransactionType type, LocalDate startDate, LocalDate endDate) {
+        List<Object[]> results = transactionRepository.findCategoryTotalsByUserAndTypeAndDateBetween(user, type, startDate, endDate);
         List<CategorySummaryDto> categorySummaries = new ArrayList<>();
         
         // Calculate total for percentage calculation
@@ -111,9 +118,9 @@ public class FinancialStatisticsService {
         return categorySummaries;
     }
     
-    private List<MonthlyTrendDto> getMonthlyTrends() {
-        List<Object[]> incomeResults = transactionRepository.findMonthlyTotalsByType(TransactionType.INCOME);
-        List<Object[]> expenseResults = transactionRepository.findMonthlyTotalsByType(TransactionType.EXPENSE);
+    private List<MonthlyTrendDto> getMonthlyTrendsForUser(User user) {
+        List<Object[]> incomeResults = transactionRepository.findMonthlyTotalsByUserAndType(user, TransactionType.INCOME);
+        List<Object[]> expenseResults = transactionRepository.findMonthlyTotalsByUserAndType(user, TransactionType.EXPENSE);
         
         // Create maps for easy lookup
         Map<String, BigDecimal> incomeMap = new HashMap<>();
@@ -177,10 +184,11 @@ public class FinancialStatisticsService {
     }
     
     public List<CategorySummaryDto> getTopExpenseCategories(int limit) {
+        User currentUser = SecurityUtil.getCurrentUser();
         LocalDate startDate = LocalDate.now().minusMonths(12);
         LocalDate endDate = LocalDate.now();
         
-        List<CategorySummaryDto> categories = getCategorySummary(TransactionType.EXPENSE, startDate, endDate);
+        List<CategorySummaryDto> categories = getCategorySummaryForUser(currentUser, TransactionType.EXPENSE, startDate, endDate);
         return categories.stream()
                 .sorted((a, b) -> b.getTotalAmount().abs().compareTo(a.getTotalAmount().abs()))
                 .limit(limit)
@@ -188,10 +196,11 @@ public class FinancialStatisticsService {
     }
     
     public BigDecimal getAverageMonthlyExpenses(int months) {
+        User currentUser = SecurityUtil.getCurrentUser();
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusMonths(months);
         
-        BigDecimal totalExpenses = getTotalByType(TransactionType.EXPENSE, startDate, endDate);
+        BigDecimal totalExpenses = getTotalByTypeForUser(currentUser, TransactionType.EXPENSE, startDate, endDate);
         return totalExpenses.abs().divide(BigDecimal.valueOf(months), 2, RoundingMode.HALF_UP);
     }
     
@@ -205,13 +214,14 @@ public class FinancialStatisticsService {
     }
     
     public List<BudgetComparisonDto> getBudgetComparisonForPeriod(LocalDate startDate, LocalDate endDate) {
+        User currentUser = SecurityUtil.getCurrentUser();
         List<BudgetComparisonDto> budgetComparisons = new ArrayList<>();
         
-        // Get all categories
-        List<Category> categories = categoryRepository.findAll();
+        // Get available categories for the user (system + user categories)
+        List<Category> categories = categoryRepository.findAvailableCategoriesForUser(currentUser);
         
         // Get actual spending for the period by category
-        List<CategorySummaryDto> actualSpending = getCategorySummary(TransactionType.EXPENSE, startDate, endDate);
+        List<CategorySummaryDto> actualSpending = getCategorySummaryForUser(currentUser, TransactionType.EXPENSE, startDate, endDate);
         Map<String, BigDecimal> actualSpendingMap = new HashMap<>();
         for (CategorySummaryDto spending : actualSpending) {
             actualSpendingMap.put(spending.getCategoryName(), spending.getTotalAmount().abs());
@@ -235,9 +245,10 @@ public class FinancialStatisticsService {
     }
 
     public List<HeatmapDataDto> getExpenseHeatmapData(LocalDate startDate, LocalDate endDate) {
-        logger.info("Generating expense heatmap data from {} to {}", startDate, endDate);
+        User currentUser = SecurityUtil.getCurrentUser();
+        logger.info("Generating expense heatmap data from {} to {} for user: {}", startDate, endDate, currentUser.getUsername());
         
-        List<Object[]> results = transactionRepository.findExpenseHeatmapData(TransactionType.EXPENSE.name(), startDate, endDate);
+        List<Object[]> results = transactionRepository.findExpenseHeatmapDataByUser(currentUser, TransactionType.EXPENSE, startDate, endDate);
         List<HeatmapDataDto> heatmapData = new ArrayList<>();
         
         // Map to convert PostgreSQL EXTRACT(DOW) values (0=Sunday, 1=Monday, ..., 6=Saturday) to day names
@@ -282,5 +293,21 @@ public class FinancialStatisticsService {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusYears(1);
         return getExpenseHeatmapData(startDate, endDate);
+    }
+    
+    // Keep original methods for backward compatibility (they will use current authenticated user)
+    private BigDecimal getTotalByType(TransactionType type, LocalDate startDate, LocalDate endDate) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        return getTotalByTypeForUser(currentUser, type, startDate, endDate);
+    }
+    
+    private List<CategorySummaryDto> getCategorySummary(TransactionType type, LocalDate startDate, LocalDate endDate) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        return getCategorySummaryForUser(currentUser, type, startDate, endDate);
+    }
+    
+    private List<MonthlyTrendDto> getMonthlyTrends() {
+        User currentUser = SecurityUtil.getCurrentUser();
+        return getMonthlyTrendsForUser(currentUser);
     }
 }
