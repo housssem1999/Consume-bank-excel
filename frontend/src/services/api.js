@@ -82,7 +82,24 @@ export const categoriesAPI = {
   
   createCategory: (categoryData) => api.post('/categories', categoryData),
   
+  updateCategory: (id, categoryData) => api.put(`/categories/${id}`, categoryData),
+  
+  deleteCategory: (id) => api.delete(`/categories/${id}`),
+  
+  getCategoryTransactionCount: (id) => api.get(`/categories/${id}/transaction-count`),
+  
   updateCategoryBudget: (id, budgetData) => api.put(`/categories/${id}/budget`, budgetData),
+};
+
+// Transactions API
+export const transactionsAPI = {
+  getTransaction: (id) => api.get(`/transactions/${id}`),
+  
+  updateTransaction: (id, transactionData) => api.put(`/transactions/${id}`, transactionData),
+  
+  createTransaction: (transactionData) => api.post('/transactions', transactionData),
+  
+  deleteTransaction: (id) => api.delete(`/transactions/${id}`),
 };
 
 // Utility functions

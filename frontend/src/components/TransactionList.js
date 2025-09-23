@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Card, DatePicker, Button, Tag, Space, Alert } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
-import { dashboardAPI, formatCurrency, formatDate } from '../services/api';
+import { Table, Card, DatePicker, Button, Tag, Space, Alert, Tooltip, Popconfirm, message } from 'antd';
+import { ReloadOutlined, EditOutlined, DeleteOutlined, PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { dashboardAPI, formatCurrency, formatDate, transactionsAPI } from '../services/api';
+import TransactionEditModal from './TransactionEditModal';
 import moment from 'moment';
 
 const { RangePicker } = DatePicker;
@@ -23,6 +24,10 @@ const TransactionList = () => {
     field: null,
     order: null,
   });
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
+  const [editModalMode, setEditModalMode] = useState('edit');
+  const [deleteLoading, setDeleteLoading] = useState({});
 
   const fetchTransactions = async (startDate, endDate, page = 0, size = 50, sortBy = null, sortDir = 'desc') => {
     try {
@@ -139,6 +144,61 @@ const TransactionList = () => {
     return colors[Math.abs(hash) % colors.length];
   };
 
+  const handleEdit = (transaction) => {
+    setEditingTransaction(transaction);
+    setEditModalMode('edit');
+    setEditModalVisible(true);
+  };
+
+  const handleCreate = () => {
+    setEditingTransaction(null);
+    setEditModalMode('create');
+    setEditModalVisible(true);
+  };
+
+  const handleEditModalCancel = () => {
+    setEditModalVisible(false);
+    setEditingTransaction(null);
+  };
+
+  const handleEditModalSuccess = (updatedTransaction) => {
+    // Refresh the transaction list to show updated data
+    handleRefresh();
+    message.success(`Transaction ${editModalMode}d successfully`);
+  };
+
+  const handleDelete = async (transaction) => {
+    try {
+      setDeleteLoading(prev => ({ ...prev, [transaction.id]: true }));
+      
+      const response = await transactionsAPI.deleteTransaction(transaction.id);
+      
+      if (response.data.success) {
+        message.success('Transaction deleted successfully');
+        // Refresh the transaction list
+        handleRefresh();
+      } else {
+        message.error(response.data.message || 'Failed to delete transaction');
+      }
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+      
+      if (error.response?.status === 404) {
+        message.error('Transaction not found. It may have already been deleted.');
+        // Refresh to update the list
+        handleRefresh();
+      } else if (error.response?.status >= 500) {
+        message.error('Server error occurred. Please try again.');
+      } else if (error.code === 'NETWORK_ERROR' || !navigator.onLine) {
+        message.error('Network connection lost. Please check your internet connection.');
+      } else {
+        message.error(error.response?.data?.message || 'Failed to delete transaction');
+      }
+    } finally {
+      setDeleteLoading(prev => ({ ...prev, [transaction.id]: false }));
+    }
+  };
+
   const columns = [
     {
       title: 'Date',
@@ -207,6 +267,41 @@ const TransactionList = () => {
       ellipsis: true,
       width: 150,
     },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: 100,
+      render: (_, record) => (
+        <Space size="small">
+          <Tooltip title="Edit Transaction">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+              size="small"
+            />
+          </Tooltip>
+          <Tooltip title="Delete Transaction">
+            <Popconfirm
+              title="Delete Transaction"
+              description={`Are you sure you want to delete this transaction?`}
+              onConfirm={() => handleDelete(record)}
+              okText="Yes"
+              cancelText="No"
+              icon={<ExclamationCircleOutlined style={{ color: 'red' }} />}
+            >
+              <Button
+                type="text"
+                icon={<DeleteOutlined />}
+                danger
+                size="small"
+                loading={deleteLoading[record.id]}
+              />
+            </Popconfirm>
+          </Tooltip>
+        </Space>
+      ),
+    },
   ];
 
   if (error) {
@@ -231,6 +326,13 @@ const TransactionList = () => {
         title="Transaction History"
         extra={
           <Space>
+            <Button 
+              type="primary"
+              icon={<PlusOutlined />} 
+              onClick={handleCreate}
+            >
+              Add Transaction
+            </Button>
             <RangePicker
               value={dateRange}
               onChange={handleDateRangeChange}
@@ -263,6 +365,14 @@ const TransactionList = () => {
           size="middle"
         />
       </Card>
+
+      <TransactionEditModal
+        visible={editModalVisible}
+        onCancel={handleEditModalCancel}
+        onSuccess={handleEditModalSuccess}
+        transaction={editingTransaction}
+        mode={editModalMode}
+      />
     </div>
   );
 };

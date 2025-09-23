@@ -134,6 +134,76 @@ public class CategoryController {
         }
     }
     
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> updateCategory(
+            @PathVariable Long id,
+            @RequestBody CategoryRequest request) {
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            Category updatedCategory = categoryService.updateCategory(
+                id, 
+                request.getName(), 
+                request.getDescription(), 
+                request.getColor()
+            );
+            
+            response.put("success", true);
+            response.put("message", "Category updated successfully");
+            response.put("category", updatedCategory);
+            return ResponseEntity.ok(response);
+            
+        } catch (IllegalArgumentException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error updating category: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+    
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> deleteCategory(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            categoryService.deleteCategory(id);
+            
+            response.put("success", true);
+            response.put("message", "Category deleted successfully");
+            return ResponseEntity.ok(response);
+            
+        } catch (IllegalArgumentException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error deleting category: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+    
+    @GetMapping("/{id}/transaction-count")
+    public ResponseEntity<Map<String, Object>> getCategoryTransactionCount(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            long count = categoryService.getTransactionCount(id);
+            response.put("success", true);
+            response.put("transactionCount", count);
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error getting transaction count: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
     // Inner class for budget update request
     public static class BudgetUpdateRequest {
         private BigDecimal monthlyBudget;

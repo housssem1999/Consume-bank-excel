@@ -127,16 +127,18 @@ public class FinancialStatisticsService {
         Map<String, BigDecimal> expenseMap = new HashMap<>();
         
         for (Object[] result : incomeResults) {
-            Integer year = (Integer) result[0];
-            Integer month = (Integer) result[1];
+            // Handle both Integer and BigDecimal types for year/month (database compatibility)
+            Integer year = result[0] instanceof BigDecimal ? ((BigDecimal) result[0]).intValue() : (Integer) result[0];
+            Integer month = result[1] instanceof BigDecimal ? ((BigDecimal) result[1]).intValue() : (Integer) result[1];
             BigDecimal amount = (BigDecimal) result[2];
             String key = year + "-" + month;
             incomeMap.put(key, amount);
         }
         
         for (Object[] result : expenseResults) {
-            Integer year = (Integer) result[0];
-            Integer month = (Integer) result[1];
+            // Handle both Integer and BigDecimal types for year/month (database compatibility)
+            Integer year = result[0] instanceof BigDecimal ? ((BigDecimal) result[0]).intValue() : (Integer) result[0];
+            Integer month = result[1] instanceof BigDecimal ? ((BigDecimal) result[1]).intValue() : (Integer) result[1];
             BigDecimal amount = (BigDecimal) result[2];
             String key = year + "-" + month;
             expenseMap.put(key, amount);
@@ -249,19 +251,31 @@ public class FinancialStatisticsService {
         List<Object[]> results = transactionRepository.findExpenseHeatmapDataByUser(currentUser, TransactionType.EXPENSE, startDate, endDate);
         List<HeatmapDataDto> heatmapData = new ArrayList<>();
         
-        // Map to convert MySQL DAYOFWEEK values (1=Sunday, 2=Monday, ..., 7=Saturday) to day names
+        // Map to convert PostgreSQL EXTRACT(DOW) values (0=Sunday, 1=Monday, ..., 6=Saturday) to day names
+        // This is compatible with both PostgreSQL and H2 when using EXTRACT(DOW FROM date)
         Map<Integer, String> dayMap = new HashMap<>();
-        dayMap.put(1, "Sunday");
-        dayMap.put(2, "Monday");
-        dayMap.put(3, "Tuesday");
-        dayMap.put(4, "Wednesday");
-        dayMap.put(5, "Thursday");
-        dayMap.put(6, "Friday");
-        dayMap.put(7, "Saturday");
+        dayMap.put(0, "Sunday");
+        dayMap.put(1, "Monday");
+        dayMap.put(2, "Tuesday");
+        dayMap.put(3, "Wednesday");
+        dayMap.put(4, "Thursday");
+        dayMap.put(5, "Friday");
+        dayMap.put(6, "Saturday");
         
         for (Object[] result : results) {
             String categoryName = (String) result[0];
-            Integer dayOfWeekNum = (Integer) result[1];
+            
+            // Handle both Integer and BigDecimal types for day of week (H2 database compatibility)
+            Integer dayOfWeekNum;
+            if (result[1] instanceof BigDecimal) {
+                dayOfWeekNum = ((BigDecimal) result[1]).intValue();
+            } else if (result[1] instanceof Integer) {
+                dayOfWeekNum = (Integer) result[1];
+            } else {
+                // Fallback for other numeric types
+                dayOfWeekNum = ((Number) result[1]).intValue();
+            }
+            
             BigDecimal amount = (BigDecimal) result[2];
             
             String dayOfWeek = dayMap.get(dayOfWeekNum);

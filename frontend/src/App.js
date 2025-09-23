@@ -7,6 +7,7 @@ import { Analytics } from '@vercel/analytics/react';
 import Dashboard from './components/Dashboard';
 import FileUpload from './components/FileUpload';
 import TransactionList from './components/TransactionList';
+import CategoryManager from './components/CategoryManager';
 import './App.css';
 
 const { Header, Content, Sider } = Layout;
@@ -30,6 +31,12 @@ function App() {
       icon: <BarChartOutlined />,
       label: 'Transactions',
       path: '/transactions'
+    },
+    {
+      key: '4',
+      icon: <SettingOutlined />,
+      label: 'Categories',
+      path: '/categories'
     }
   ];
 
@@ -100,6 +107,7 @@ function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/upload" element={<FileUpload />} />
                 <Route path="/transactions" element={<TransactionList />} />
+                <Route path="/categories" element={<CategoryManager />} />
               </Routes>
             </div>
           </Content>
