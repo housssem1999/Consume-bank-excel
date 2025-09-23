@@ -1,13 +1,14 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Layout, Menu } from 'antd';
-import { DashboardOutlined, UploadOutlined, BarChartOutlined, SettingOutlined } from '@ant-design/icons';
+import { DashboardOutlined, UploadOutlined, BarChartOutlined, SettingOutlined, ContactsOutlined } from '@ant-design/icons';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Analytics } from '@vercel/analytics/react';
 import Dashboard from './components/Dashboard';
 import FileUpload from './components/FileUpload';
 import TransactionList from './components/TransactionList';
 import CategoryManager from './components/CategoryManager';
+import Contact from './components/Contact';
 import './App.css';
 
 const { Header, Content, Sider } = Layout;
@@ -37,6 +38,12 @@ function App() {
       icon: <SettingOutlined />,
       label: 'Categories',
       path: '/categories'
+    },
+    {
+      key: '5',
+      icon: <ContactsOutlined />,
+      label: 'Contact',
+      path: '/contact'
     }
   ];
 
@@ -108,6 +115,7 @@ function App() {
                 <Route path="/upload" element={<FileUpload />} />
                 <Route path="/transactions" element={<TransactionList />} />
                 <Route path="/categories" element={<CategoryManager />} />
+                <Route path="/contact" element={<Contact />} />
               </Routes>
             </div>
           </Content>
