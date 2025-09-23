@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout, Menu, Button, Dropdown, Avatar } from 'antd';
-import { DashboardOutlined, UploadOutlined, BarChartOutlined, SettingOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
+import { DashboardOutlined, UploadOutlined, BarChartOutlined, SettingOutlined, UserOutlined, LogoutOutlined, ContactsOutlined } from '@ant-design/icons';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Analytics } from '@vercel/analytics/react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
