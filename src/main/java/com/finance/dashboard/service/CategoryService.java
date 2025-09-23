@@ -20,7 +20,6 @@ public class CategoryService {
     
     private static final Logger logger = LoggerFactory.getLogger(CategoryService.class);
     
-    @Autowired
     private final CategoryRepository categoryRepository;
     
     private Map<String, String> categoryKeywords;
