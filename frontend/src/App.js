@@ -12,6 +12,7 @@ import Dashboard from './components/Dashboard';
 import FileUpload from './components/FileUpload';
 import TransactionList from './components/TransactionList';
 import CategoryManager from './components/CategoryManager';
+import Contact from './components/Contact';
 import './App.css';
 
 const { Header, Content, Sider } = Layout;
@@ -43,6 +44,12 @@ const AuthenticatedApp = () => {
       icon: <SettingOutlined />,
       label: 'Categories',
       path: '/categories'
+    },
+    {
+      key: '5',
+      icon: <ContactsOutlined />,
+      label: 'Contact',
+      path: '/contact'
     }
   ];
 
