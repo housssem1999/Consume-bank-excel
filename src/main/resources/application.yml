@@ -33,6 +33,9 @@ server:
 app:
   cors:
     allowed-origins: http://localhost:3000
+  jwt:
+    secret: ${JWT_SECRET:mySecretKeyThatIsAtLeast32CharactersLongForHS256Algorithm}
+    expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
 
 logging:
   level:

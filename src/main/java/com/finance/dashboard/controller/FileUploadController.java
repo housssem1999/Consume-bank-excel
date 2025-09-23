@@ -16,12 +16,10 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/upload")
-@CrossOrigin(origins = "http://localhost:3000")
 public class FileUploadController {
     
     private static final Logger logger = LoggerFactory.getLogger(FileUploadController.class);
     
-    @Autowired
     private final ExcelProcessingService excelProcessingService;
 
     public FileUploadController(ExcelProcessingService excelProcessingService) {
