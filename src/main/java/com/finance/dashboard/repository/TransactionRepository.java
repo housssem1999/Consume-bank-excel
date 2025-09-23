@@ -53,11 +53,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     Long countTransactionsByUserAndBetweenDates(@Param("user") User user, @Param("startDate") LocalDate startDate, 
                                       @Param("endDate") LocalDate endDate);
     
-    @Query("SELECT t.category.name, DAYOFWEEK(t.date), SUM(t.amount) FROM Transaction t " +
-           "WHERE t.user = :user AND t.type = :type AND t.date BETWEEN :startDate AND :endDate " +
-           "GROUP BY t.category.name, DAYOFWEEK(t.date) " +
-           "ORDER BY t.category.name, DAYOFWEEK(t.date)")
-    List<Object[]> findExpenseHeatmapDataByUser(@Param("user") User user, @Param("type") TransactionType type,
+    @Query(value = "SELECT c.name, EXTRACT(DOW FROM t.date), SUM(t.amount) FROM transactions t " +
+           "JOIN categories c ON c.id = t.category_id " +
+           "WHERE t.user_id = :userId AND t.type = :type AND t.date BETWEEN :startDate AND :endDate " +
+           "GROUP BY c.name, EXTRACT(DOW FROM t.date) " +
+           "ORDER BY c.name, EXTRACT(DOW FROM t.date)", nativeQuery = true)
+    List<Object[]> findExpenseHeatmapDataByUser(@Param("userId") Long userId, @Param("type") String type,
                                          @Param("startDate") LocalDate startDate,
                                          @Param("endDate") LocalDate endDate);
     
