@@ -42,27 +42,43 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             jwtToken = requestTokenHeader.substring(7);
             try {
                 username = jwtUtil.getUsernameFromToken(jwtToken);
+                logger.debug("Extracted username from JWT: {}", username);
             } catch (Exception e) {
                 logger.error("Unable to get JWT Token or JWT Token has expired", e);
             }
         } else {
-            logger.debug("JWT Token does not begin with Bearer String");
+            logger.debug("JWT Token does not begin with Bearer String. Header: {}", requestTokenHeader);
         }
-        
+
         // Once we get the token validate it
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-            
-            // if token is valid configure Spring Security to manually set authentication
-            if (jwtUtil.validateToken(jwtToken, userDetails)) {
-                UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = 
-                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                
-                // After setting the Authentication in the context, we specify that the current user is authenticated.
-                // So it passes the Spring Security Configurations successfully.
-                SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+            logger.debug("Username from token: {}. Proceeding to load user.", username);
+            UserDetails userDetails = null;
+            try {
+                userDetails = this.userDetailsService.loadUserByUsername(username);
+            } catch (Exception e) {
+                logger.error("UserDetailsService failed to load user: {}", username, e);
             }
+
+            if (userDetails == null) {
+                logger.warn("UserDetails is null for username: {}", username);
+            } else {
+                // if token is valid configure Spring Security to manually set authentication
+                boolean valid = jwtUtil.validateToken(jwtToken, userDetails);
+                logger.debug("Token validation for user {}: {}", username, valid);
+                if (valid) {
+                    UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = 
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+                } else {
+                    logger.warn("JWT token is invalid for user: {}", username);
+                }
+            }
+        } else if (username == null) {
+            logger.warn("Username extracted from JWT is null. Token: {}", jwtToken);
+        } else if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            logger.debug("SecurityContext already has authentication for user: {}", username);
         }
         filterChain.doFilter(request, response);
     }
