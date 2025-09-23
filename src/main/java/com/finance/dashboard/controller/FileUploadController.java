@@ -21,7 +21,6 @@ public class FileUploadController {
     
     private static final Logger logger = LoggerFactory.getLogger(FileUploadController.class);
     
-    @Autowired
     private final ExcelProcessingService excelProcessingService;
 
     public FileUploadController(ExcelProcessingService excelProcessingService) {
