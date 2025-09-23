@@ -19,6 +19,8 @@ import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import com.finance.dashboard.model.User;
+import com.finance.dashboard.util.SecurityUtil;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -327,7 +329,8 @@ public class TransactionController {
             }
         } else {
             // Auto-categorize if no category provided
-            Category autoCategory = categoryService.categorizeTransaction(request.getDescription());
+            User currentUser = SecurityUtil.getCurrentUser();
+            Category autoCategory = categoryService.categorizeTransaction(request.getDescription(), currentUser);
             transaction.setCategory(autoCategory);
         }
         
