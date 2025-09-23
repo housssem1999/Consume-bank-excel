@@ -14,6 +14,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
     
     Optional<User> findByEmail(String email);
     
+    
+    @Modifying
+    @Query("UPDATE User u SET u.lastLogin = :lastLogin WHERE u.id = :userId")
+    void updateLastLogin(@Param("userId") Long userId, @Param("lastLogin") LocalDateTime lastLogin);
+    
+    @Query("SELECT COUNT(u) FROM User u WHERE u.role = 'ADMIN'")
+    long countAdmins();
+  
     boolean existsByUsername(String username);
     
     boolean existsByEmail(String email);
