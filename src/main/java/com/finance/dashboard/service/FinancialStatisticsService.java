@@ -248,7 +248,7 @@ public class FinancialStatisticsService {
         User currentUser = SecurityUtil.getCurrentUser();
         logger.info("Generating expense heatmap data from {} to {} for user: {}", startDate, endDate, currentUser.getUsername());
         
-        List<Object[]> results = transactionRepository.findExpenseHeatmapDataByUser(currentUser, TransactionType.EXPENSE, startDate, endDate);
+        List<Object[]> results = transactionRepository.findExpenseHeatmapDataByUser(currentUser.getId(), TransactionType.EXPENSE.name(), startDate, endDate);
         List<HeatmapDataDto> heatmapData = new ArrayList<>();
         
         // Map to convert PostgreSQL EXTRACT(DOW) values (0=Sunday, 1=Monday, ..., 6=Saturday) to day names
