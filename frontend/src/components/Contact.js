@@ -68,7 +68,7 @@ const Contact = () => {
             <Text strong>Frontend:</Text> React, JavaScript, HTML/CSS, Ant Design, Chart.js
           </Paragraph>
           <Paragraph>
-            <Text strong>Tools & Technologies:</Text> Maven, Git, Excel Processing (Apache POI), H2 Database
+            <Text strong>Tools & Technologies:</Text> Maven, Git, Excel Processing (Apache POI), Postgres Database
           </Paragraph>
         </div>
 
@@ -83,7 +83,7 @@ const Contact = () => {
               type="primary"
               icon={<LinkedinOutlined />}
               size="large"
-              href="https://linkedin.com/in/houssem"
+              href="https://linkedin.com/in/houssem-moussa"
               target="_blank"
               rel="noopener noreferrer"
               style={{ 
