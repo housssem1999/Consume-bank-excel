@@ -63,6 +63,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/upload/sample-format").permitAll()
                     .requestMatchers("/h2-console/**").permitAll()
                     .requestMatchers("/actuator/health").permitAll()
+                    .requestMatchers("/error").permitAll()
                     .anyRequest().authenticated()
                 )
                 .headers(headers -> headers.frameOptions().sameOrigin())

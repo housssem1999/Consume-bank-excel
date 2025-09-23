@@ -27,6 +27,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("UPDATE User u SET u.lastLogin = :lastLogin WHERE u.id = :userId")
     void updateLastLogin(@Param("userId") Long userId, @Param("lastLogin") LocalDateTime lastLogin);
     
-    @Query("SELECT COUNT(u) FROM User u WHERE u.role = com.finance.dashboard.model.User.Role.ADMIN")
+    @Query("SELECT COUNT(u) FROM User u WHERE u.role = 'ADMIN'")
     long countAdmins();
 }
