@@ -3,9 +3,7 @@ package com.finance.dashboard.service;
 import com.finance.dashboard.model.User;
 import com.finance.dashboard.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+// ...existing imports...
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +13,7 @@ import java.util.Optional;
 
 @Service
 @Transactional
-public class UserService implements UserDetailsService {
+public class UserService {
     
     @Autowired
     private UserRepository userRepository;
@@ -23,12 +21,7 @@ public class UserService implements UserDetailsService {
     @Autowired
     private PasswordEncoder passwordEncoder;
     
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsernameOrEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
-        return user;
-    }
+    // ...existing code...
     
     public User createUser(String username, String email, String password, String firstName, String lastName) {
         if (userRepository.existsByUsername(username)) {
