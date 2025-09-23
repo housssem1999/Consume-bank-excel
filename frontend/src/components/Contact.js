@@ -10,6 +10,16 @@ import {
 const { Title, Paragraph, Text } = Typography;
 
 const Contact = () => {
+  const adminEmail = "mhoussem789@gmail.com";
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(adminEmail);
+      message.success("Admin email copied to clipboard!");
+    } catch (err) {
+      message.error("Failed to copy email.");
+    }
+  };
   return (
     <div style={{ padding: '24px' }}>
       <Title level={2}>Contact & About</Title>
@@ -106,6 +116,19 @@ const Contact = () => {
               }}
             >
               GitHub Profile
+            </Button>
+            <Button
+              icon={<MailOutlined />}
+              size="large"
+              rel="noopener noreferrer"
+              onClick={handleCopy}
+              style={{
+                backgroundColor: '#ea4335',
+                borderColor: '#fbbc04',
+                color: 'white'
+              }}
+            >
+              Gmail
             </Button>
           </Space>
         </div>
