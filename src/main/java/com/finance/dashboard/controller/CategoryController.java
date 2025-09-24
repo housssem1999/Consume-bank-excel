@@ -119,6 +119,17 @@ public class CategoryController {
             }
             
             Category category = categoryOpt.get();
+            User currentUser = SecurityUtil.getCurrentUser();
+            
+            // Check if user has permission to update this category's budget
+            // System categories (user == null) can be updated by any authenticated user
+            // User-specific categories can only be updated by their owner
+            if (category.getUser() != null && !category.getUser().getId().equals(currentUser.getId())) {
+                response.put("success", false);
+                response.put("message", "You don't have permission to update this category's budget");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+            
             category.setMonthlyBudget(request.getMonthlyBudget());
             Category updatedCategory = categoryService.saveCategory(category);
             
