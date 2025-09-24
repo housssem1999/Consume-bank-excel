@@ -14,7 +14,7 @@ const BudgetManager = ({ onBudgetUpdate }) => {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const response = await categoriesAPI.getAllCategories();
+      const response = await categoriesAPI.getCategoriesWithBudgets();
       setCategories(response.data);
     } catch (error) {
       message.error('Failed to fetch categories');
@@ -68,6 +68,9 @@ const BudgetManager = ({ onBudgetUpdate }) => {
             }}
           />
           {text}
+          {record.isSystemCategory && (
+            <span style={{ color: '#666', fontSize: '12px' }}>(System)</span>
+          )}
         </Space>
       ),
     },
@@ -104,7 +107,7 @@ const BudgetManager = ({ onBudgetUpdate }) => {
   return (
     <Card title="Budget Management" style={{ marginBottom: '24px' }}>
       <p style={{ marginBottom: '16px', color: '#666' }}>
-        Set monthly budgets for your expense categories. Changes are saved automatically.
+        Set monthly budgets for your expense categories. System categories are shared but you can set your own budget values for them. Changes are saved automatically.
       </p>
       <Table
         columns={columns}

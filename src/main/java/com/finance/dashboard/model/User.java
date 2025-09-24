@@ -76,6 +76,10 @@ public class User implements UserDetails {
     @JsonIgnore
     private List<Category> categories = new ArrayList<>();
     
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @JsonIgnore
+    private List<UserCategoryBudget> categoryBudgets = new ArrayList<>();
+    
     // Constructors
     public User() {}
     
@@ -216,6 +220,14 @@ public class User implements UserDetails {
     
     public void setCategories(List<Category> categories) {
         this.categories = categories;
+    }
+    
+    public List<UserCategoryBudget> getCategoryBudgets() {
+        return categoryBudgets;
+    }
+    
+    public void setCategoryBudgets(List<UserCategoryBudget> categoryBudgets) {
+        this.categoryBudgets = categoryBudgets;
     }
     
     public String getFullName() {
