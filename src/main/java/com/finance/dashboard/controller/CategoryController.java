@@ -30,13 +30,7 @@ public class CategoryController {
     }
     
     @GetMapping
-    public ResponseEntity<List<Category>> getAllCategories() {
-        List<Category> categories = categoryService.getAllCategories();
-        return ResponseEntity.ok(categories);
-    }
-    
-    @GetMapping("/with-budgets")
-    public ResponseEntity<List<CategoryWithBudgetDto>> getCategoriesWithBudgets() {
+    public ResponseEntity<List<CategoryWithBudgetDto>> getAllCategories() {
         try {
             User currentUser = SecurityUtil.getCurrentUser();
             List<CategoryWithBudgetDto> categoriesWithBudgets = categoryService.getCategoriesWithBudgetsForUser(currentUser);
@@ -88,6 +82,7 @@ public class CategoryController {
         private String name;
         private String description;
         private String color;
+        private BigDecimal monthlyBudget;
         
         // Getters and setters
         public String getName() {
@@ -113,46 +108,13 @@ public class CategoryController {
         public void setColor(String color) {
             this.color = color;
         }
-    }
-    
-    @PutMapping("/{id}/budget")
-    public ResponseEntity<Map<String, Object>> updateCategoryBudget(
-            @PathVariable Long id,
-            @RequestBody BudgetUpdateRequest request) {
         
-        Map<String, Object> response = new HashMap<>();
+        public BigDecimal getMonthlyBudget() {
+            return monthlyBudget;
+        }
         
-        try {
-            Optional<Category> categoryOpt = categoryService.getCategoryById(id);
-            if (categoryOpt.isEmpty()) {
-                response.put("success", false);
-                response.put("message", "Category not found");
-                return ResponseEntity.notFound().build();
-            }
-            
-            Category category = categoryOpt.get();
-            User currentUser = SecurityUtil.getCurrentUser();
-            
-            // Check if user has permission to update this category's budget
-            // System categories (user == null) can be updated by any authenticated user
-            // User-specific categories can only be updated by their owner
-            if (category.getUser() != null && !category.getUser().getId().equals(currentUser.getId())) {
-                response.put("success", false);
-                response.put("message", "You don't have permission to update this category's budget");
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-            }
-            
-            Category updatedCategory = categoryService.updateCategoryBudget(id, request.getMonthlyBudget(), currentUser);
-            
-            response.put("success", true);
-            response.put("message", "Budget updated successfully");
-            response.put("category", updatedCategory);
-            return ResponseEntity.ok(response);
-            
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("message", "Error updating budget: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        public void setMonthlyBudget(BigDecimal monthlyBudget) {
+            this.monthlyBudget = monthlyBudget;
         }
     }
     
@@ -164,11 +126,14 @@ public class CategoryController {
         Map<String, Object> response = new HashMap<>();
         
         try {
-            Category updatedCategory = categoryService.updateCategory(
+            User currentUser = SecurityUtil.getCurrentUser();
+            CategoryWithBudgetDto updatedCategory = categoryService.updateCategoryWithBudget(
                 id, 
                 request.getName(), 
                 request.getDescription(), 
-                request.getColor()
+                request.getColor(),
+                request.getMonthlyBudget(),
+                currentUser
             );
             
             response.put("success", true);
@@ -226,16 +191,4 @@ public class CategoryController {
         }
     }
 
-    // Inner class for budget update request
-    public static class BudgetUpdateRequest {
-        private BigDecimal monthlyBudget;
-        
-        public BigDecimal getMonthlyBudget() {
-            return monthlyBudget;
-        }
-        
-        public void setMonthlyBudget(BigDecimal monthlyBudget) {
-            this.monthlyBudget = monthlyBudget;
-        }
-    }
 }
