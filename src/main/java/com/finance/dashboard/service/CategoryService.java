@@ -274,6 +274,68 @@ public class CategoryService {
         return categoryRepository.save(category);
     }
     
+    /**
+     * Unified method to update both category information and budget
+     */
+    public CategoryWithBudgetDto updateCategoryWithBudget(Long id, String name, String description, String color, BigDecimal budget, User user) {
+        Optional<Category> categoryOpt = categoryRepository.findById(id);
+        if (categoryOpt.isEmpty()) {
+            throw new IllegalArgumentException("Category with id " + id + " not found");
+        }
+        
+        Category category = categoryOpt.get();
+        
+        // Check permissions for category updates
+        if (category.getUser() != null && !category.getUser().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("You don't have permission to update this category");
+        }
+        
+        // Update category info if provided
+        if (name != null || description != null || color != null) {
+            // Check if name is being changed and if new name already exists
+            if (name != null && !category.getName().equals(name) && categoryRepository.existsByName(name)) {
+                throw new IllegalArgumentException("Category with name '" + name + "' already exists");
+            }
+            
+            if (name != null) category.setName(name);
+            if (description != null) category.setDescription(description);
+            if (color != null) category.setColor(color);
+            
+            category = categoryRepository.save(category);
+        }
+        
+        // Update budget if provided
+        if (budget != null) {
+            // Check if user has permission to update this category's budget
+            if (!category.isSystemCategory() && !category.getUser().getId().equals(user.getId())) {
+                throw new IllegalArgumentException("You don't have permission to update this category's budget");
+            }
+            
+            if (category.isSystemCategory()) {
+                // For system categories, use user-category budget mapping
+                userCategoryBudgetService.setBudgetForUserAndCategory(user, category, budget);
+            } else {
+                // For user categories, update the category directly
+                category.setMonthlyBudget(budget);
+                category = categoryRepository.save(category);
+            }
+        }
+        
+        // Return the updated category with budget info
+        BigDecimal effectiveBudget = userCategoryBudgetService.getBudgetForUserAndCategory(user, category);
+        boolean hasBudget = effectiveBudget != null && effectiveBudget.compareTo(BigDecimal.ZERO) > 0;
+        
+        return new CategoryWithBudgetDto(
+            category.getId(),
+            category.getName(),
+            category.getDescription(),
+            category.getColor(),
+            hasBudget ? effectiveBudget : BigDecimal.ZERO,
+            category.isSystemCategory(),
+            hasBudget
+        );
+    }
+    
     public void deleteCategory(Long id) {
         Optional<Category> categoryOpt = categoryRepository.findById(id);
         if (categoryOpt.isEmpty()) {

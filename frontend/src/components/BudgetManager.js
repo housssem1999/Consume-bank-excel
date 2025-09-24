@@ -14,7 +14,7 @@ const BudgetManager = ({ onBudgetUpdate }) => {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const response = await categoriesAPI.getCategoriesWithBudgets();
+      const response = await categoriesAPI.getAllCategories();
       setCategories(response.data);
     } catch (error) {
       message.error('Failed to fetch categories');

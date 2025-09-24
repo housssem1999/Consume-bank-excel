@@ -107,8 +107,6 @@ export const uploadAPI = {
 export const categoriesAPI = {
   getAllCategories: () => api.get('/categories'),
   
-  getCategoriesWithBudgets: () => api.get('/categories/with-budgets'),
-  
   getCategoryById: (id) => api.get(`/categories/${id}`),
   
   createCategory: (categoryData) => api.post('/categories', categoryData),
@@ -119,7 +117,8 @@ export const categoriesAPI = {
   
   getCategoryTransactionCount: (id) => api.get(`/categories/${id}/transaction-count`),
   
-  updateCategoryBudget: (id, budgetData) => api.put(`/categories/${id}/budget`, budgetData),
+  // Legacy method name for backward compatibility - redirects to updateCategory
+  updateCategoryBudget: (id, budgetData) => api.put(`/categories/${id}`, { monthlyBudget: budgetData.monthlyBudget }),
 };
 
 // Transactions API
