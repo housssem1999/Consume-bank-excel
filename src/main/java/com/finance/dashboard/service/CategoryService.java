@@ -2,18 +2,22 @@ package com.finance.dashboard.service;
 
 import com.finance.dashboard.model.Category;
 import com.finance.dashboard.model.User;
+import com.finance.dashboard.model.UserCategoryBudget;
 import com.finance.dashboard.repository.CategoryRepository;
 import com.finance.dashboard.util.SecurityUtil;
+import com.finance.dashboard.dto.CategoryWithBudgetDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class CategoryService {
@@ -21,12 +25,14 @@ public class CategoryService {
     private static final Logger logger = LoggerFactory.getLogger(CategoryService.class);
     
     private final CategoryRepository categoryRepository;
+    private final UserCategoryBudgetService userCategoryBudgetService;
     
     private Map<String, String> categoryKeywords;
     private Category defaultCategory;
 
-    public CategoryService(CategoryRepository categoryRepository) {
+    public CategoryService(CategoryRepository categoryRepository, UserCategoryBudgetService userCategoryBudgetService) {
         this.categoryRepository = categoryRepository;
+        this.userCategoryBudgetService = userCategoryBudgetService;
     }
     
     @PostConstruct
@@ -298,5 +304,71 @@ public class CategoryService {
             return categoryOpt.get().getTransactions().size();
         }
         return 0;
+    }
+    
+    /**
+     * Update budget for a category. Handles both system and user categories appropriately.
+     */
+    public Category updateCategoryBudget(Long categoryId, BigDecimal budget, User user) {
+        Optional<Category> categoryOpt = categoryRepository.findById(categoryId);
+        if (categoryOpt.isEmpty()) {
+            throw new IllegalArgumentException("Category with id " + categoryId + " not found");
+        }
+        
+        Category category = categoryOpt.get();
+        
+        // Check if user has permission to update this category's budget
+        if (!category.isSystemCategory() && !category.getUser().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("You don't have permission to update this category's budget");
+        }
+        
+        if (category.isSystemCategory()) {
+            // For system categories, use user-category budget mapping
+            userCategoryBudgetService.setBudgetForUserAndCategory(user, category, budget);
+        } else {
+            // For user categories, update the category directly
+            category.setMonthlyBudget(budget);
+            categoryRepository.save(category);
+        }
+        
+        return category;
+    }
+    
+    /**
+     * Get the effective budget for a category for a specific user.
+     */
+    public BigDecimal getCategoryBudgetForUser(Category category, User user) {
+        return userCategoryBudgetService.getBudgetForUserAndCategory(user, category);
+    }
+    
+    /**
+     * Get all user-specific budgets for a user.
+     */
+    public List<UserCategoryBudget> getUserBudgets(User user) {
+        return userCategoryBudgetService.getAllBudgetsForUser(user);
+    }
+    
+    /**
+     * Get categories with their effective budgets for a specific user.
+     */
+    public List<CategoryWithBudgetDto> getCategoriesWithBudgetsForUser(User user) {
+        List<Category> availableCategories = getAvailableCategoriesForUser(user);
+        
+        return availableCategories.stream()
+            .map(category -> {
+                BigDecimal budget = userCategoryBudgetService.getBudgetForUserAndCategory(user, category);
+                boolean hasBudget = budget != null && budget.compareTo(BigDecimal.ZERO) > 0;
+                
+                return new CategoryWithBudgetDto(
+                    category.getId(),
+                    category.getName(),
+                    category.getDescription(),
+                    category.getColor(),
+                    hasBudget ? budget : BigDecimal.ZERO,
+                    category.isSystemCategory(),
+                    hasBudget
+                );
+            })
+            .collect(Collectors.toList());
     }
 }
