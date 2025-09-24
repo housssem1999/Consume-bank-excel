@@ -35,10 +35,16 @@ public class FinancialStatisticsService {
     
     @Autowired
     private final CategoryRepository categoryRepository;
+    
+    @Autowired
+    private final UserCategoryBudgetService userCategoryBudgetService;
 
-    public FinancialStatisticsService(TransactionRepository transactionRepository, CategoryRepository categoryRepository) {
+    public FinancialStatisticsService(TransactionRepository transactionRepository, 
+                                    CategoryRepository categoryRepository,
+                                    UserCategoryBudgetService userCategoryBudgetService) {
         this.transactionRepository = transactionRepository;
         this.categoryRepository = categoryRepository;
+        this.userCategoryBudgetService = userCategoryBudgetService;
     }
     
     public FinancialSummaryDto getFinancialSummary(LocalDate startDate, LocalDate endDate) {
@@ -229,11 +235,12 @@ public class FinancialStatisticsService {
         
         // Create budget comparison for each category with a budget
         for (Category category : categories) {
-            if (category.getMonthlyBudget() != null && category.getMonthlyBudget().compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal userBudget = userCategoryBudgetService.getBudgetForUserAndCategory(currentUser, category);
+            if (userBudget != null && userBudget.compareTo(BigDecimal.ZERO) > 0) {
                 BigDecimal actualAmount = actualSpendingMap.getOrDefault(category.getName(), BigDecimal.ZERO);
                 BudgetComparisonDto comparison = new BudgetComparisonDto(
                     category.getName(),
-                    category.getMonthlyBudget(),
+                    userBudget,
                     actualAmount,
                     category.getColor()
                 );

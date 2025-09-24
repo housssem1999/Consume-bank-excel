@@ -4,6 +4,7 @@ import com.finance.dashboard.model.Category;
 import com.finance.dashboard.model.User;
 import com.finance.dashboard.service.CategoryService;
 import com.finance.dashboard.util.SecurityUtil;
+import com.finance.dashboard.dto.CategoryWithBudgetDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +33,17 @@ public class CategoryController {
     public ResponseEntity<List<Category>> getAllCategories() {
         List<Category> categories = categoryService.getAllCategories();
         return ResponseEntity.ok(categories);
+    }
+    
+    @GetMapping("/with-budgets")
+    public ResponseEntity<List<CategoryWithBudgetDto>> getCategoriesWithBudgets() {
+        try {
+            User currentUser = SecurityUtil.getCurrentUser();
+            List<CategoryWithBudgetDto> categoriesWithBudgets = categoryService.getCategoriesWithBudgetsForUser(currentUser);
+            return ResponseEntity.ok(categoriesWithBudgets);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
     
     @GetMapping("/{id}")
@@ -119,8 +131,18 @@ public class CategoryController {
             }
             
             Category category = categoryOpt.get();
-            category.setMonthlyBudget(request.getMonthlyBudget());
-            Category updatedCategory = categoryService.saveCategory(category);
+            User currentUser = SecurityUtil.getCurrentUser();
+            
+            // Check if user has permission to update this category's budget
+            // System categories (user == null) can be updated by any authenticated user
+            // User-specific categories can only be updated by their owner
+            if (category.getUser() != null && !category.getUser().getId().equals(currentUser.getId())) {
+                response.put("success", false);
+                response.put("message", "You don't have permission to update this category's budget");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+            
+            Category updatedCategory = categoryService.updateCategoryBudget(id, request.getMonthlyBudget(), currentUser);
             
             response.put("success", true);
             response.put("message", "Budget updated successfully");

@@ -35,6 +35,10 @@ public class Category {
     @JoinColumn(name = "user_id")
     private User user; // null for system default categories
     
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<UserCategoryBudget> userBudgets = new ArrayList<>();
+    
     // Constructors
     public Category() {}
     
@@ -104,6 +108,14 @@ public class Category {
     
     public boolean isSystemCategory() {
         return user == null;
+    }
+    
+    public List<UserCategoryBudget> getUserBudgets() {
+        return userBudgets;
+    }
+    
+    public void setUserBudgets(List<UserCategoryBudget> userBudgets) {
+        this.userBudgets = userBudgets;
     }
     
     @Override

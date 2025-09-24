@@ -107,6 +107,8 @@ export const uploadAPI = {
 export const categoriesAPI = {
   getAllCategories: () => api.get('/categories'),
   
+  getCategoriesWithBudgets: () => api.get('/categories/with-budgets'),
+  
   getCategoryById: (id) => api.get(`/categories/${id}`),
   
   createCategory: (categoryData) => api.post('/categories', categoryData),
