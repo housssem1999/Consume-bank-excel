@@ -169,6 +169,7 @@ const AuthenticatedApp = () => {
               <Route path="/upload" element={<FileUpload />} />
               <Route path="/transactions" element={<TransactionList />} />
               <Route path="/categories" element={<CategoryManager />} />
+              <Route path="/contact" element={<Contact />} />
             </Routes>
           </div>
         </Content>
