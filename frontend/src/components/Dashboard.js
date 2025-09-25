@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Statistic, Spin, Alert, DatePicker, Button, Tabs } from 'antd';
-import { ArrowUpOutlined, ArrowDownOutlined, DollarOutlined, TransactionOutlined } from '@ant-design/icons';
+import { ArrowUpOutlined, ArrowDownOutlined, DollarOutlined, TransactionOutlined, RobotOutlined } from '@ant-design/icons';
 import { dashboardAPI, formatCurrency } from '../services/api';
 import ExpenseChart from './charts/ExpenseChart';
 import IncomeChart from './charts/IncomeChart';
@@ -19,6 +19,8 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [summary, setSummary] = useState(null);
   const [budgetData, setBudgetData] = useState([]);
+  const [mlInsights, setMlInsights] = useState([]);
+  const [mlLoading, setMlLoading] = useState(false);
   const [budgetLoading, setBudgetLoading] = useState(false);
   const [heatmapData, setHeatmapData] = useState([]);
   const [dateRange, setDateRange] = useState([
@@ -74,9 +76,25 @@ const Dashboard = () => {
     }
   };
 
+  const fetchMLInsights = async () => {
+    try {
+      setMlLoading(true);
+      const response = await fetch('/api/ml-analytics/insights/spending');
+      if (response.ok) {
+        const data = await response.json();
+        setMlInsights(data.insights?.slice(0, 3) || []); // Show top 3 insights
+      }
+    } catch (err) {
+      console.error('Error fetching ML insights:', err);
+    } finally {
+      setMlLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchDashboardData(dateRange[0], dateRange[1]);
     fetchBudgetData(dateRange[0], dateRange[1]);
+    fetchMLInsights();
   }, []);
 
   const handleDateRangeChange = (dates) => {
@@ -279,6 +297,67 @@ const Dashboard = () => {
         <Col span={24}>
           <Card title="Expense Heatmap by Day of Week" className="chart-container">
             <ExpenseHeatmapChart data={heatmapData} />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* AI Insights Section */}
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        <Col span={24}>
+          <Card 
+            title={
+              <span>
+                <RobotOutlined style={{ color: '#1890ff', marginRight: 8 }} />
+                AI Insights & Recommendations
+              </span>
+            }
+            extra={
+              <Button 
+                type="link" 
+                onClick={() => window.location.href = '/ml-analytics'}
+                icon={<RobotOutlined />}
+              >
+                View All AI Analytics
+              </Button>
+            }
+            className="chart-container"
+          >
+            <Spin spinning={mlLoading}>
+              {mlInsights.length > 0 ? (
+                <Row gutter={[16, 16]}>
+                  {mlInsights.map((insight, index) => (
+                    <Col xs={24} md={8} key={index}>
+                      <Card 
+                        size="small" 
+                        style={{ 
+                          height: '100%',
+                          borderLeft: `4px solid ${
+                            insight.severity === 'HIGH' ? '#ff4d4f' : 
+                            insight.severity === 'MEDIUM' ? '#faad14' : '#52c41a'
+                          }`
+                        }}
+                      >
+                        <div style={{ marginBottom: 8 }}>
+                          <strong>{insight.title}</strong>
+                        </div>
+                        <div style={{ color: '#666', fontSize: '14px', marginBottom: 8 }}>
+                          {insight.description}
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#999' }}>
+                          Type: {insight.insightType} | 
+                          Confidence: {insight.confidence ? Math.round(insight.confidence * 100) + '%' : 'N/A'}
+                        </div>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                  <RobotOutlined style={{ fontSize: '32px', marginBottom: '8px' }} />
+                  <div>AI insights will appear here as you add more transactions</div>
+                </div>
+              )}
+            </Spin>
           </Card>
         </Col>
       </Row>
