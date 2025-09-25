@@ -65,7 +65,7 @@ jobs:
   deploy-backend:
     runs-on: ubuntu-latest
     needs: [test-backend]
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/copilot/fix-328b1c39-2b0d-4552-ba40-a4528659d9e7'
     name: Deploy Backend to Railway
     environment: production
     
