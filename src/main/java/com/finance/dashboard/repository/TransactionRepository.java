@@ -24,6 +24,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     
     Page<Transaction> findByUserAndDateBetween(User user, LocalDate startDate, LocalDate endDate, Pageable pageable);
     
+    List<Transaction> findByUserAndDateBetween(User user, LocalDate startDate, LocalDate endDate);
+    
     List<Transaction> findByUserAndType(User user, TransactionType type);
     
     List<Transaction> findByUserAndDateBetweenAndType(User user, LocalDate startDate, LocalDate endDate, TransactionType type);
