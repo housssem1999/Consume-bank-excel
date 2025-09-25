@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { Layout, Menu, Button, Dropdown, Avatar } from 'antd';
 import { DashboardOutlined, UploadOutlined, BarChartOutlined, SettingOutlined, UserOutlined, LogoutOutlined, ContactsOutlined } from '@ant-design/icons';
 import { SpeedInsights } from '@vercel/speed-insights/react';
@@ -19,6 +19,8 @@ const { Header, Content, Sider } = Layout;
 
 const AuthenticatedApp = () => {
   const { user, logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const menuItems = [
     {
@@ -52,6 +54,13 @@ const AuthenticatedApp = () => {
       path: '/contact'
     }
   ];
+
+  // Function to get the selected menu key based on current path
+  const getSelectedKey = () => {
+    const currentPath = location.pathname;
+    const menuItem = menuItems.find(item => item.path === currentPath);
+    return menuItem ? [menuItem.key] : ['1']; // Default to Dashboard if no match
+  };
 
   const userMenuItems = [
     {
@@ -104,17 +113,14 @@ const AuthenticatedApp = () => {
         <Menu
           theme="dark"
           mode="inline"
-          defaultSelectedKeys={['1']}
+          selectedKeys={getSelectedKey()}
           items={menuItems.map(item => ({
             key: item.key,
             icon: item.icon,
             label: (
-              <a href={item.path} onClick={(e) => {
-                e.preventDefault();
-                window.location.href = item.path;
-              }}>
+              <span onClick={() => navigate(item.path)}>
                 {item.label}
-              </a>
+              </span>
             )
           }))}
         />
