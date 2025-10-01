@@ -5,4 +5,4 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://your-domain.vercel.app/sitemap.xml
+Sitemap: https://budget-analytics-pink.vercel.app/sitemap.xml
