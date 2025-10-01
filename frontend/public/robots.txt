@@ -1,0 +1,8 @@
+# robots.txt for Personal Finance Dashboard
+# Allow all crawlers to access all content
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://your-domain.vercel.app/sitemap.xml

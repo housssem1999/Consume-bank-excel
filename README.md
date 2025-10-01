@@ -256,6 +256,33 @@ CORS is configured globally via `CorsConfig.java` and can be customized using th
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
+## 🔍 SEO & Search Engine Optimization
+
+This application is fully optimized for search engines including Google, Bing, and others.
+
+### Implemented Features
+- ✅ **robots.txt** - Allows search engine crawlers
+- ✅ **sitemap.xml** - Helps search engines discover pages
+- ✅ **Meta tags** - Rich descriptions and keywords
+- ✅ **Open Graph tags** - Better social media sharing
+- ✅ **Twitter Cards** - Enhanced Twitter previews
+- ✅ **Structured data (JSON-LD)** - Rich search results
+- ✅ **Canonical URLs** - Prevents duplicate content
+
+### Setup Instructions
+After deploying to production, update these files with your actual domain:
+1. `frontend/public/robots.txt` - Update sitemap URL
+2. `frontend/public/sitemap.xml` - Replace `your-domain.vercel.app` with your domain
+3. `frontend/public/index.html` - Update all meta tag URLs
+
+For detailed instructions, see [SEO_IMPLEMENTATION.md](./SEO_IMPLEMENTATION.md)
+
+### Submit to Search Engines
+1. **Google Search Console**: https://search.google.com/search-console
+   - Add your site and submit sitemap
+2. **Bing Webmaster Tools**: https://www.bing.com/webmasters
+   - Add your site and submit sitemap
+
 ## 🆘 Support
 
 If you encounter any issues or have questions:
