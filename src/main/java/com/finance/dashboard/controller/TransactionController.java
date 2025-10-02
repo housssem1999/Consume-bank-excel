@@ -315,13 +315,15 @@ public class TransactionController {
     }
     
     private Transaction createTransactionFromRequest(TransactionCreateRequest request) {
+        User currentUser = SecurityUtil.getCurrentUser();
         Transaction transaction = new Transaction();
         
         transaction.setDate(LocalDate.parse(request.getDate()));
         transaction.setDescription(request.getDescription().trim());
         transaction.setAmount(new BigDecimal(request.getAmount()));
         transaction.setType(TransactionType.valueOf(request.getType().toUpperCase()));
-        
+        transaction.setUser(currentUser);
+
         if (request.getCategoryId() != null) {
             Optional<Category> category = categoryService.getCategoryById(request.getCategoryId());
             if (category.isPresent()) {
@@ -329,7 +331,6 @@ public class TransactionController {
             }
         } else {
             // Auto-categorize if no category provided
-            User currentUser = SecurityUtil.getCurrentUser();
             Category autoCategory = categoryService.categorizeTransaction(request.getDescription(), currentUser);
             transaction.setCategory(autoCategory);
         }
