@@ -1,7 +1,7 @@
-const { connectToDatabase } = require('../db');
-const { authenticateUser } = require('../middleware/auth');
-const Transaction = require('../models/Transaction');
-const { categorizeByDescription } = require('../utils/categorizer');
+const { connectToDatabase } = require('./lib/db');
+const { authenticateUser } = require('./middleware/auth');
+const Transaction = require('./models/Transaction');
+const { categorizeByDescription } = require('./utils/categorizer');
 const XLSX = require('xlsx');
 
 module.exports = async (req, res) => {

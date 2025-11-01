@@ -1,7 +1,7 @@
-const { connectToDatabase } = require('../db');
-const { authenticateUser } = require('../middleware/auth');
-const Category = require('../models/Category');
-const UserCategoryBudget = require('../models/UserCategoryBudget');
+const { connectToDatabase } = require('./lib/db');
+const { authenticateUser } = require('./middleware/auth');
+const Category = require('./models/Category');
+const UserCategoryBudget = require('./models/UserCategoryBudget');
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') {

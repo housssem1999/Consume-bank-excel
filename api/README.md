@@ -4,22 +4,26 @@ This directory contains the Node.js serverless functions that power the Personal
 
 ## 📁 Structure
 
+**Consolidated for Vercel Free Tier (5 functions max)**
+
 ```
 api/
-├── auth/                    # Authentication endpoints
-│   ├── login.js            # POST /api/auth/login
-│   ├── register.js         # POST /api/auth/register
-│   └── me.js               # GET /api/auth/me
-├── categories/             # Category management
-│   └── index.js            # GET/POST /api/categories
-├── transactions/           # Transaction management
-│   ├── index.js            # POST /api/transactions
-│   └── [id].js             # GET/PUT/DELETE /api/transactions/:id
-├── dashboard/              # Dashboard endpoints
-│   ├── summary.js          # GET /api/dashboard/summary
-│   └── transactions.js     # GET /api/dashboard/transactions
-├── upload/                 # File upload
-│   └── excel.js            # POST /api/upload/excel
+├── auth.js                  # Authentication endpoints (consolidated)
+│                           # POST /api/auth/login
+│                           # POST /api/auth/register
+│                           # GET /api/auth/me
+├── categories.js           # Category management (consolidated)
+│                           # GET/POST /api/categories
+├── transactions.js         # Transaction CRUD (consolidated)
+│                           # POST /api/transactions
+│                           # GET/PUT/DELETE /api/transactions/:id
+├── dashboard.js            # Dashboard endpoints (consolidated)
+│                           # GET /api/dashboard/summary
+│                           # GET /api/dashboard/transactions
+├── upload.js               # File upload (consolidated)
+│                           # POST /api/upload/excel
+├── lib/                    # Internal libraries
+│   └── db.js              # MongoDB connection
 ├── models/                 # MongoDB schemas
 │   ├── User.js
 │   ├── Category.js
@@ -30,9 +34,10 @@ api/
 │   └── categorizer.js      # Auto-categorization logic
 ├── middleware/             # Middleware functions
 │   └── auth.js             # Authentication middleware
-├── db.js                   # MongoDB connection
 └── package.json            # Dependencies
 ```
+
+**Note:** Each top-level `.js` file in `/api` becomes a Vercel serverless function. This structure uses only **5 functions**, well under the Hobby plan limit of 12.
 
 ## 🔧 Dependencies
 

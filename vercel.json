@@ -3,8 +3,24 @@
   "outputDirectory": "frontend/build",
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
+      "source": "/api/auth/:path*",
+      "destination": "/api/auth"
+    },
+    {
+      "source": "/api/categories/:path*",
+      "destination": "/api/categories"
+    },
+    {
+      "source": "/api/dashboard/:path*",
+      "destination": "/api/dashboard"
+    },
+    {
+      "source": "/api/transactions/:path*",
+      "destination": "/api/transactions"
+    },
+    {
+      "source": "/api/upload/:path*",
+      "destination": "/api/upload"
     },
     {
       "source": "/robots.txt",
