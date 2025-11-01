@@ -4,7 +4,7 @@ This directory contains the Node.js serverless functions that power the Personal
 
 ## 📁 Structure
 
-**Consolidated for Vercel Free Tier (5 functions max)**
+**Optimized for Vercel Hobby Plan (5 functions only)**
 
 ```
 api/
@@ -22,8 +22,10 @@ api/
 │                           # GET /api/dashboard/transactions
 ├── upload.js               # File upload (consolidated)
 │                           # POST /api/upload/excel
-├── lib/                    # Internal libraries
-│   └── db.js              # MongoDB connection
+└── package.json            # Dependencies
+
+lib/api/                     # Shared code (NOT counted as functions)
+├── db.js                   # MongoDB connection
 ├── models/                 # MongoDB schemas
 │   ├── User.js
 │   ├── Category.js
@@ -32,12 +34,11 @@ api/
 ├── utils/                  # Utility functions
 │   ├── jwt.js              # JWT token handling
 │   └── categorizer.js      # Auto-categorization logic
-├── middleware/             # Middleware functions
-│   └── auth.js             # Authentication middleware
-└── package.json            # Dependencies
+└── middleware/             # Middleware functions
+    └── auth.js             # Authentication middleware
 ```
 
-**Note:** Each top-level `.js` file in `/api` becomes a Vercel serverless function. This structure uses only **5 functions**, well under the Hobby plan limit of 12.
+**Note:** Only the 5 `.js` files directly in `/api` are deployed as serverless functions. All helper code is in `/lib/api` to avoid Vercel's function count limit.
 
 ## 🔧 Dependencies
 

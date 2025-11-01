@@ -78,9 +78,9 @@ const fs = require('fs');
 const csv = require('csv-parser');
 
 // Import models
-const User = require('./api/models/User');
-const Category = require('./api/models/Category');
-const Transaction = require('./api/models/Transaction');
+const User = require('./lib/api/models/User');
+const Category = require('./lib/api/models/Category');
+const Transaction = require('./lib/api/models/Transaction');
 
 async function migrate() {
   await mongoose.connect(process.env.MONGODB_URI);
