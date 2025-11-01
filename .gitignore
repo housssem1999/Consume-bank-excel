@@ -3,5 +3,10 @@
 target/
 frontend/node_modules/
 frontend/build/
+api/node_modules/
 *.iml
+.env
+.env.local
+.env.production
+.vercel
 
