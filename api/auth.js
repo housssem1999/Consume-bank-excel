@@ -1,9 +1,9 @@
 const bcrypt = require('bcryptjs');
-const { connectToDatabase } = require('../lib/api/db');
-const User = require('../lib/api/models/User');
-const Category = require('../lib/api/models/Category');
-const { generateToken } = require('../lib/api/utils/jwt');
-const { authenticateUser } = require('../lib/api/middleware/auth');
+const { connectToDatabase } = require('../lib/server/db');
+const User = require('../lib/server/models/User');
+const Category = require('../lib/server/models/Category');
+const { generateToken } = require('../lib/server/utils/jwt');
+const { authenticateUser } = require('../lib/server/middleware/auth');
 
 const DEFAULT_CATEGORIES = [
   { name: 'Food & Dining', description: 'Groceries, restaurants, and food expenses', color: '#FF6384' },

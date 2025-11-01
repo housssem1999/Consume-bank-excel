@@ -1,6 +1,6 @@
-const { connectToDatabase } = require('../lib/api/db');
-const { authenticateUser } = require('../lib/api/middleware/auth');
-const Transaction = require('../lib/api/models/Transaction');
+const { connectToDatabase } = require('../lib/server/db');
+const { authenticateUser } = require('../lib/server/middleware/auth');
+const Transaction = require('../lib/server/models/Transaction');
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') {

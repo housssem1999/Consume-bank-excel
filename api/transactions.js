@@ -1,8 +1,8 @@
-const { connectToDatabase } = require('../lib/api/db');
-const { authenticateUser } = require('../lib/api/middleware/auth');
-const Transaction = require('../lib/api/models/Transaction');
-const Category = require('../lib/api/models/Category');
-const { categorizeByDescription } = require('../lib/api/utils/categorizer');
+const { connectToDatabase } = require('../lib/server/db');
+const { authenticateUser } = require('../lib/server/middleware/auth');
+const Transaction = require('../lib/server/models/Transaction');
+const Category = require('../lib/server/models/Category');
+const { categorizeByDescription } = require('../lib/server/utils/categorizer');
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') {
