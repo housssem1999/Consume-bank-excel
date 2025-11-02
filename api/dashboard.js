@@ -1,6 +1,7 @@
 const { connectToDatabase } = require('../lib/server/db');
 const { authenticateUser } = require('../lib/server/middleware/auth');
 const Transaction = require('../lib/server/models/Transaction');
+const Category = require('../lib/server/models/Category');
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') {
