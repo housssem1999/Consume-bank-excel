@@ -1,0 +1,23 @@
+{
+  "name": "finance-dashboard",
+  "version": "1.0.0",
+  "description": "Personal Finance Dashboard with Serverless Backend",
+  "private": true,
+  "scripts": {
+    "install:api": "cd api && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "install:all": "npm run install:api && npm run install:frontend",
+    "dev": "vercel dev",
+    "build": "cd frontend && CI=false npm run build"
+  },
+  "dependencies": {
+    "mongoose": "^8.0.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "xlsx": "^0.18.5",
+    "multer": "^1.4.5-lts.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
