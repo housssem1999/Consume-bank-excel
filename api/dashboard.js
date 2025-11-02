@@ -204,15 +204,23 @@ module.exports = async (req, res) => {
       const endYear = end.getFullYear();
       const endMonth = end.getMonth() + 1;
 
-      // For simplicity, get all budgets in the date range
-      const budgets = await UserCategoryBudget.find({
-        user: user._id,
-        $or: [
-          { year: startYear, month: { $gte: startMonth, $lte: startMonth === endMonth && startYear === endYear ? endMonth : 12 } },
-          { year: { $gt: startYear, $lt: endYear } },
-          { year: endYear, month: { $lte: endMonth } }
-        ]
-      }).populate('category');
+      // Build budget query conditions based on date range
+      const budgetQuery = { user: user._id };
+      
+      if (startYear === endYear) {
+        // Same year: simple month range
+        budgetQuery.year = startYear;
+        budgetQuery.month = { $gte: startMonth, $lte: endMonth };
+      } else {
+        // Multiple years: combine conditions
+        budgetQuery.$or = [
+          { year: startYear, month: { $gte: startMonth } }, // Months from start year
+          { year: { $gt: startYear, $lt: endYear } }, // Full years in between
+          { year: endYear, month: { $lte: endMonth } } // Months in end year
+        ];
+      }
+
+      const budgets = await UserCategoryBudget.find(budgetQuery).populate('category');
 
       // Aggregate budgets by category
       const categoryBudgets = {};
@@ -317,14 +325,16 @@ module.exports = async (req, res) => {
         {
           $project: {
             _id: 0,
-            category: { $ifNull: ['$_id.category', 'Other'] },
+            category: { $ifNull: ['$_id.category', 'Uncategorized'] },
             dayOfWeek: '$_id.dayOfWeek',
             amount: 1
           }
         }
       ]);
 
-      // Map day numbers to day names (MongoDB $dayOfWeek: 1=Sunday, 2=Monday, ..., 7=Saturday)
+      // Map day numbers to day names
+      // Note: MongoDB $dayOfWeek returns 1=Sunday, 2=Monday, ..., 7=Saturday
+      // This is consistent with the Spring Boot implementation using EXTRACT(DOW)
       const dayMap = {
         1: 'Sunday',
         2: 'Monday',
