@@ -2,6 +2,7 @@ const { connectToDatabase } = require('../lib/server/db');
 const { authenticateUser } = require('../lib/server/middleware/auth');
 const Transaction = require('../lib/server/models/Transaction');
 const Category = require('../lib/server/models/Category');
+const UserCategoryBudget = require('../lib/server/models/UserCategoryBudget');
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') {
@@ -55,7 +56,7 @@ module.exports = async (req, res) => {
         }
 
         // Category breakdown
-        const categoryName = transaction.category ? transaction.category.name : 'Other';
+        const categoryName = transaction.category ? transaction.category.name : 'Uncategorized';
         if (!categoryBreakdown[categoryName]) {
           categoryBreakdown[categoryName] = 0;
         }
@@ -133,6 +134,226 @@ module.exports = async (req, res) => {
         size: limit,
         totalPages
       });
+    }
+
+    // GET /api/dashboard/budget-comparison/period
+    if (path.includes('/budget-comparison/period')) {
+      const { startDate, endDate } = req.query;
+
+      if (!startDate || !endDate) {
+        return res.status(400).json({
+          success: false,
+          message: 'startDate and endDate are required'
+        });
+      }
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      // Get all categories available to the user (system categories + user's custom categories)
+      const categories = await Category.find({
+        $or: [
+          { user: null }, // System categories
+          { user: user._id } // User's custom categories
+        ]
+      });
+
+      // Get actual spending for the period by category
+      const spendingAggregation = await Transaction.aggregate([
+        {
+          $match: {
+            user: user._id,
+            type: 'EXPENSE',
+            date: { $gte: start, $lte: end }
+          }
+        },
+        {
+          $lookup: {
+            from: 'categories',
+            localField: 'category',
+            foreignField: '_id',
+            as: 'categoryData'
+          }
+        },
+        {
+          $unwind: {
+            path: '$categoryData',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $group: {
+            _id: '$categoryData._id',
+            categoryName: { $first: '$categoryData.name' },
+            actualAmount: { $sum: { $abs: '$amount' } }
+          }
+        }
+      ]);
+
+      // Create a map for easy lookup
+      const spendingMap = {};
+      spendingAggregation.forEach(item => {
+        if (item.categoryName) {
+          spendingMap[item.categoryName] = item.actualAmount;
+        }
+      });
+
+      // Get user budgets for the period
+      const startYear = start.getFullYear();
+      const startMonth = start.getMonth() + 1;
+      const endYear = end.getFullYear();
+      const endMonth = end.getMonth() + 1;
+
+      // Build budget query conditions based on date range
+      const budgetQuery = { user: user._id };
+      
+      if (startYear === endYear) {
+        // Same year: simple month range
+        budgetQuery.year = startYear;
+        budgetQuery.month = { $gte: startMonth, $lte: endMonth };
+      } else {
+        // Multiple years: combine conditions
+        // Note: For consecutive years (e.g., 2023-2024), the middle condition matches nothing, which is correct
+        budgetQuery.$or = [
+          { year: startYear, month: { $gte: startMonth } }, // Months from start year
+          { year: { $gt: startYear, $lt: endYear } }, // Full years in between (if any exist)
+          { year: endYear, month: { $lte: endMonth } } // Months in end year
+        ];
+      }
+
+      const budgets = await UserCategoryBudget.find(budgetQuery).populate('category');
+
+      // Aggregate budgets by category
+      const categoryBudgets = {};
+      budgets.forEach(budget => {
+        const categoryName = budget.category.name;
+        if (!categoryBudgets[categoryName]) {
+          categoryBudgets[categoryName] = {
+            totalBudget: 0,
+            color: budget.category.color
+          };
+        }
+        categoryBudgets[categoryName].totalBudget += budget.monthlyBudget;
+      });
+
+      // Build budget comparison response
+      const budgetComparisons = [];
+      
+      for (const category of categories) {
+        const categoryName = category.name;
+        const budgetInfo = categoryBudgets[categoryName];
+        
+        if (budgetInfo && budgetInfo.totalBudget > 0) {
+          const budgetAmount = budgetInfo.totalBudget;
+          const actualAmount = spendingMap[categoryName] || 0;
+          
+          // Calculate percentage difference
+          const difference = actualAmount - budgetAmount;
+          const percentageDifference = budgetAmount > 0 ? (difference / budgetAmount) * 100 : 0;
+          
+          // Determine status color
+          let statusColor;
+          if (actualAmount <= budgetAmount) {
+            statusColor = '#52c41a'; // Green - under budget
+          } else {
+            statusColor = '#ff4d4f'; // Red - over budget
+          }
+          
+          budgetComparisons.push({
+            categoryName,
+            budgetAmount,
+            actualAmount,
+            percentageDifference,
+            statusColor,
+            categoryColor: budgetInfo.color || category.color
+          });
+        }
+      }
+
+      return res.status(200).json(budgetComparisons);
+    }
+
+    // GET /api/dashboard/expense-heatmap
+    if (path.includes('/expense-heatmap')) {
+      const { startDate, endDate } = req.query;
+
+      let dateFilter = { user: user._id, type: 'EXPENSE' };
+      
+      if (startDate && endDate) {
+        dateFilter.date = {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate)
+        };
+      } else {
+        // Default to last year
+        const now = new Date();
+        const oneYearAgo = new Date(now);
+        oneYearAgo.setFullYear(now.getFullYear() - 1);
+        dateFilter.date = {
+          $gte: oneYearAgo,
+          $lte: now
+        };
+      }
+
+      // Aggregate expenses by category and day of week
+      const heatmapData = await Transaction.aggregate([
+        {
+          $match: dateFilter
+        },
+        {
+          $lookup: {
+            from: 'categories',
+            localField: 'category',
+            foreignField: '_id',
+            as: 'categoryData'
+          }
+        },
+        {
+          $unwind: {
+            path: '$categoryData',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $group: {
+            _id: {
+              category: '$categoryData.name',
+              dayOfWeek: { $dayOfWeek: '$date' }
+            },
+            amount: { $sum: { $abs: '$amount' } }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            category: { $ifNull: ['$_id.category', 'Uncategorized'] },
+            dayOfWeek: '$_id.dayOfWeek',
+            amount: 1
+          }
+        }
+      ]);
+
+      // Map day numbers to day names
+      // Note: MongoDB $dayOfWeek returns 1=Sunday, 2=Monday, ..., 7=Saturday
+      // This is consistent with the Spring Boot implementation using EXTRACT(DOW)
+      const dayMap = {
+        1: 'Sunday',
+        2: 'Monday',
+        3: 'Tuesday',
+        4: 'Wednesday',
+        5: 'Thursday',
+        6: 'Friday',
+        7: 'Saturday'
+      };
+
+      // Convert day numbers to day names
+      const formattedHeatmapData = heatmapData.map(item => ({
+        category: item.category,
+        dayOfWeek: dayMap[item.dayOfWeek] || 'Unknown',
+        amount: item.amount
+      }));
+
+      return res.status(200).json(formattedHeatmapData);
     }
 
     return res.status(404).json({
