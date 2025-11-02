@@ -1,7 +1,11 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL ? 
-  `${process.env.REACT_APP_API_URL}/api` : 'http://localhost:8080/api';
+// For serverless deployment, API is at /api on the same domain
+// For local development with Spring Boot backend, use localhost:8080
+// For local development with Vercel dev, use localhost:3000
+const API_BASE_URL = process.env.REACT_APP_API_URL || 
+  (process.env.NODE_ENV === 'production' ? '/api' : 
+   (process.env.REACT_APP_USE_SERVERLESS === 'true' ? '/api' : 'http://localhost:8080/api'));
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -91,12 +95,23 @@ export const dashboardAPI = {
 // File Upload API
 export const uploadAPI = {
   uploadExcelFile: (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    return api.post('/upload/excel', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          // Get base64 string (remove data:*/*;base64, prefix)
+          const base64 = e.target.result.split(',')[1];
+          const response = await api.post('/upload/excel', {
+            file: base64,
+            filename: file.name
+          });
+          resolve(response);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = (error) => reject(error);
+      reader.readAsDataURL(file);
     });
   },
   

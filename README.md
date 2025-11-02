@@ -2,14 +2,26 @@
 
 A comprehensive personal finance management application that helps you track your income, expenses, and financial trends by importing bank statements from Excel files.
 
+## ⚡ **NEW: Serverless Architecture - Zero Cost Deployment!**
+
+This application now uses a **fully serverless architecture** with **$0/month hosting costs**:
+- 🆓 **Vercel Serverless Functions** (Free tier - was $5/month on Railway)
+- 🆓 **MongoDB Atlas** (Free tier 512MB - was PostgreSQL on Railway)
+- 🆓 **Vercel Frontend Hosting** (Already free)
+
+**Total Monthly Cost: $0** (Previously $5/month)
+
+See [SERVERLESS_DEPLOYMENT.md](./SERVERLESS_DEPLOYMENT.md) for full deployment guide.
+
 ## 🚀 Features
 
-### Backend (Spring Boot)
+### Backend (Serverless Functions)
 - **Excel File Processing**: Import bank statements from .xlsx/.xls files
 - **Automatic Categorization**: Smart categorization of transactions based on description
 - **Financial Statistics**: Calculate income, expenses, trends, and category breakdowns
-- **RESTful API**: Clean API endpoints for frontend integration
-- **H2 Database**: In-memory database for development (easily configurable for production)
+- **RESTful API**: Clean serverless API endpoints
+- **JWT Authentication**: Secure user authentication with JSON Web Tokens
+- **MongoDB Database**: Flexible NoSQL database with free tier
 
 ### Frontend (React)
 - **Interactive Dashboard**: Visual overview of your financial data
@@ -17,6 +29,7 @@ A comprehensive personal finance management application that helps you track you
 - **File Upload Interface**: Drag-and-drop Excel file upload
 - **Transaction Management**: View and filter transaction history
 - **Responsive Design**: Works on desktop and mobile devices
+- **User Authentication**: Secure login and registration
 
 ### Key Statistics
 - Monthly and yearly income/expense summaries
@@ -25,15 +38,16 @@ A comprehensive personal finance management application that helps you track you
 - Top expense categories
 - Average monthly expenses
 - Net income calculations
+- Budget tracking and comparisons
 
 ## 🛠️ Technology Stack
 
-### Backend
-- **Spring Boot 3.2.0** - Main framework
-- **Spring Data JPA** - Data persistence
-- **H2 Database** - In-memory database
-- **Apache POI** - Excel file processing
-- **Maven** - Dependency management
+### Backend (Serverless)
+- **Node.js 18+** - Runtime
+- **Vercel Serverless Functions** - Hosting
+- **MongoDB with Mongoose** - Database and ODM
+- **JWT & bcrypt** - Authentication and security
+- **xlsx** - Excel file processing
 
 ### Frontend
 - **React 18** - Frontend framework
@@ -42,59 +56,113 @@ A comprehensive personal finance management application that helps you track you
 - **Axios** - HTTP client
 - **React Router** - Navigation
 
+### Legacy Backend (Optional)
+The original Spring Boot backend is still available in the `src/` directory for those who prefer it.
+- **Spring Boot 3.2.0** - Main framework
+- **Spring Data JPA** - Data persistence
+- **PostgreSQL** - Production database
+- **Apache POI** - Excel file processing
+
 ## 📋 Prerequisites
 
-- **Java 17** or higher
-- **Node.js 16** or higher
+### For Serverless Deployment (Recommended)
+- **Node.js 18** or higher
+- **MongoDB Atlas account** (free)
+- **Vercel account** (free)
+
+### For Local Development
+- **Node.js 18** or higher
 - **npm** or **yarn**
+
+### For Legacy Spring Boot (Optional)
+- **Java 17** or higher
 - **Maven 3.6** or higher
 
-## 🚀 Getting Started
+## 🚀 Quick Start (Serverless)
 
 ### 1. Clone the Repository
 ```bash
 git clone <repository-url>
-cd finance-dashboard
+cd Consume-bank-excel
 ```
 
-### 2. Backend Setup
+### 2. Set Up MongoDB Atlas (Free)
+1. Go to [mongodb.com/cloud/atlas/register](https://www.mongodb.com/cloud/atlas/register)
+2. Create a free cluster
+3. Create database user and get connection string
+4. Note your connection string for step 3
 
-#### Install Dependencies
+### 3. Deploy to Vercel
+1. Go to [vercel.com](https://vercel.com) and sign up
+2. Click "Add New..." → "Project"
+3. Import this repository
+4. Add environment variables:
+   ```env
+   MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/finance-dashboard
+   JWT_SECRET=your-secret-key-at-least-32-characters
+   JWT_EXPIRATION=24h
+   ```
+5. Click "Deploy" - Done! 🎉
+
+Your app will be live at `https://your-project.vercel.app`
+
+**Full deployment guide**: See [SERVERLESS_DEPLOYMENT.md](./SERVERLESS_DEPLOYMENT.md)
+
+## 💻 Local Development (Serverless)
+
+### 1. Install Dependencies
+```bash
+# Install API dependencies
+cd api
+npm install
+
+# Install frontend dependencies
+cd ../frontend
+npm install
+cd ..
+```
+
+### 2. Set Up Environment Variables
+Create `.env` file in root:
+```env
+MONGODB_URI=your-mongodb-connection-string
+JWT_SECRET=your-secret-key-at-least-32-characters
+JWT_EXPIRATION=24h
+```
+
+### 3. Run Development Server
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Run both frontend and API
+vercel dev
+```
+
+The app will start on `http://localhost:3000` with API at `http://localhost:3000/api`
+
+## 💻 Legacy Local Development (Spring Boot)
+
+If you want to run the old Spring Boot backend:
+
+### 1. Install Dependencies
 ```bash
 mvn clean install
 ```
 
-#### Run the Spring Boot Application
+### 2. Run Spring Boot
 ```bash
 mvn spring-boot:run
 ```
+Backend starts on `http://localhost:8080`
 
-The backend will start on `http://localhost:8080`
-
-#### Access H2 Database Console (Optional)
-- URL: `http://localhost:8080/h2-console`
-- JDBC URL: `jdbc:h2:mem:financedb`
-- Username: `sa`
-- Password: `password`
-
-### 3. Frontend Setup
-
-#### Navigate to Frontend Directory
+### 3. Run Frontend
 ```bash
 cd frontend
-```
-
-#### Install Dependencies
-```bash
 npm install
-```
-
-#### Start the React Application
-```bash
 npm start
 ```
-
-The frontend will start on `http://localhost:3000`
+Frontend starts on `http://localhost:3000`
 
 ## 📊 Excel File Format
 
@@ -116,47 +184,75 @@ Your Excel file should follow this structure:
 
 ## 🎯 API Endpoints
 
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - User login
+- `GET /api/auth/me` - Get current user
+
 ### Dashboard
 - `GET /api/dashboard/summary` - Get financial summary
-- `GET /api/dashboard/summary/current-month` - Current month summary
-- `GET /api/dashboard/summary/current-year` - Current year summary
-- `GET /api/dashboard/transactions` - Get transactions with filters
-- `GET /api/dashboard/top-expenses` - Top expense categories
-- `GET /api/dashboard/stats` - Quick statistics
+- `GET /api/dashboard/transactions` - Get transactions with pagination
+
+### Transactions
+- `GET /api/transactions/[id]` - Get transaction by ID
+- `POST /api/transactions` - Create transaction
+- `PUT /api/transactions/[id]` - Update transaction
+- `DELETE /api/transactions/[id]` - Delete transaction
 
 ### File Upload
-- `POST /api/upload/excel` - Upload Excel file
-- `GET /api/upload/sample-format` - Get expected format info
+- `POST /api/upload/excel` - Upload and process Excel file
 
 ### Categories
 - `GET /api/categories` - Get all categories
 - `POST /api/categories` - Create new category
 
+**Full API documentation**: See [api/README.md](./api/README.md)
+
 ## 🏗️ Project Structure
 
 ```
-finance-dashboard/
-├── src/main/java/com/finance/dashboard/
-│   ├── controller/          # REST controllers
-│   ├── service/            # Business logic
-│   ├── model/              # Entity classes
-│   ├── repository/         # Data access layer
-│   └── dto/                # Data transfer objects
-├── src/main/resources/
-│   └── application.yml     # Configuration
-├── frontend/
+Consume-bank-excel/
+├── api/                     # Serverless API (Node.js)
+│   ├── auth/               # Authentication endpoints
+│   ├── categories/         # Category management
+│   ├── transactions/       # Transaction CRUD
+│   ├── dashboard/          # Dashboard statistics
+│   ├── upload/             # File upload processing
+│   ├── models/             # MongoDB schemas
+│   ├── utils/              # Utility functions
+│   └── middleware/         # Authentication middleware
+├── frontend/               # React frontend
 │   ├── src/
-│   │   ├── components/     # React components
-│   │   ├── services/       # API services
-│   │   └── charts/         # Chart components
+│   │   ├── components/    # React components
+│   │   ├── services/      # API services
+│   │   ├── contexts/      # React contexts
+│   │   └── charts/        # Chart components
 │   └── public/
-└── pom.xml                 # Maven configuration
+├── src/                    # Legacy Spring Boot (optional)
+│   └── main/java/         # Java source code
+├── vercel.json            # Vercel configuration
+└── SERVERLESS_DEPLOYMENT.md  # Deployment guide
 ```
+
+## 💰 Cost Comparison
+
+| Service | Old Cost | New Cost | Savings |
+|---------|----------|----------|---------|
+| Backend | Railway: $5/mo | Vercel: $0 | $5/mo |
+| Database | Included | MongoDB Atlas: $0 | $0 |
+| Frontend | Vercel: $0 | Vercel: $0 | $0 |
+| **Total** | **$5/month** | **$0/month** | **$60/year** |
 
 ## 🔧 Configuration
 
-### Database Configuration
-Edit `src/main/resources/application.yml` to change database settings:
+### Serverless Configuration (Current)
+Environment variables in Vercel dashboard:
+- `MONGODB_URI` - MongoDB Atlas connection string
+- `JWT_SECRET` - Secret key for JWT tokens
+- `JWT_EXPIRATION` - Token expiration time (e.g., 24h)
+
+### Legacy Spring Boot Configuration (Optional)
+Edit `src/main/resources/application.yml`:
 
 ```yaml
 spring:
@@ -166,22 +262,31 @@ spring:
     password: password
 ```
 
-### CORS Configuration
-The backend is configured to allow requests from `http://localhost:3000`. Update the `@CrossOrigin` annotations in controllers for production.
-
 ## 🚀 Deployment
 
-Deploy your Personal Finance Dashboard using **Vercel (Frontend) + Railway (Backend)** - the recommended deployment option leveraging free resources from GitHub Student Pack.
+### Serverless Deployment (Recommended - $0/month)
 
-### Quick Deployment: Vercel + Railway
+Deploy as a fully serverless application with zero monthly costs:
 
-**Frontend: Vercel (Free)**
+**Backend + Frontend: Vercel (Free)**
+- Unlimited serverless function invocations
 - 100GB bandwidth/month
-- Unlimited sites and custom domains
 - Automatic HTTPS and global CDN
+- Zero infrastructure management
 
-**Backend: Railway ($5/month student credit)**
-- 500 hours runtime with 1GB RAM
+**Database: MongoDB Atlas (Free)**
+- 512MB storage (thousands of transactions)
+- Shared cluster
+- Automatic backups
+- SSL connections
+
+**📚 Complete Guide**: [SERVERLESS_DEPLOYMENT.md](./SERVERLESS_DEPLOYMENT.md)
+
+**🔄 Migration Guide**: If migrating from Spring Boot: [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md)
+
+### Legacy Deployment (Optional - Railway + PostgreSQL)
+
+For those who prefer the Spring Boot backend:
 - PostgreSQL database included
 - Zero-cost with GitHub Student Pack
 

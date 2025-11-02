@@ -3,6 +3,26 @@
   "outputDirectory": "frontend/build",
   "rewrites": [
     {
+      "source": "/api/auth/:path*",
+      "destination": "/api/auth"
+    },
+    {
+      "source": "/api/categories/:path*",
+      "destination": "/api/categories"
+    },
+    {
+      "source": "/api/dashboard/:path*",
+      "destination": "/api/dashboard"
+    },
+    {
+      "source": "/api/transactions/:path*",
+      "destination": "/api/transactions"
+    },
+    {
+      "source": "/api/upload/:path*",
+      "destination": "/api/upload"
+    },
+    {
       "source": "/robots.txt",
       "destination": "/robots.txt"
     },
@@ -20,6 +40,23 @@
     }
   ],
   "headers": [
+    {
+      "source": "/api/:path*",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
+    },
     {
       "source": "/robots.txt",
       "headers": [
