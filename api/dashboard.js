@@ -56,7 +56,7 @@ module.exports = async (req, res) => {
         }
 
         // Category breakdown
-        const categoryName = transaction.category ? transaction.category.name : 'Other';
+        const categoryName = transaction.category ? transaction.category.name : 'Uncategorized';
         if (!categoryBreakdown[categoryName]) {
           categoryBreakdown[categoryName] = 0;
         }
@@ -213,9 +213,10 @@ module.exports = async (req, res) => {
         budgetQuery.month = { $gte: startMonth, $lte: endMonth };
       } else {
         // Multiple years: combine conditions
+        // Note: For consecutive years (e.g., 2023-2024), the middle condition matches nothing, which is correct
         budgetQuery.$or = [
           { year: startYear, month: { $gte: startMonth } }, // Months from start year
-          { year: { $gt: startYear, $lt: endYear } }, // Full years in between
+          { year: { $gt: startYear, $lt: endYear } }, // Full years in between (if any exist)
           { year: endYear, month: { $lte: endMonth } } // Months in end year
         ];
       }
