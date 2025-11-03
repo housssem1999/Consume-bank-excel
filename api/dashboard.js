@@ -278,6 +278,7 @@ module.exports = async (req, res) => {
           // Calculate percentage difference
           const difference = actualAmount - budgetAmount;
           const percentageDifference = budgetAmount > 0 ? (difference / budgetAmount) * 100 : 0;
+          const overBudget = actualAmount > budgetAmount;
           
           // Determine status color
           let statusColor;
@@ -292,6 +293,7 @@ module.exports = async (req, res) => {
             budgetAmount,
             actualAmount,
             percentageDifference,
+            overBudget,
             statusColor,
             categoryColor: budgetInfo.color || category.color
           });
