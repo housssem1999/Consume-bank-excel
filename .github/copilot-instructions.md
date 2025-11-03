@@ -1,46 +1,63 @@
 # Personal Finance Dashboard - GitHub Copilot Instructions
 
-A comprehensive personal finance management application built with Spring Boot 3.2.0 (Java 17) backend and React 18 frontend, featuring Excel file processing for bank statement imports with automatic transaction categorization.
+A comprehensive personal finance management application built with **Node.js Serverless Functions** backend and **React 18** frontend, deployed entirely on **Vercel** with **MongoDB Atlas** database. Features Excel file processing for bank statement imports with automatic transaction categorization.
 
 **Always reference these instructions first and fallback to search or bash commands only when you encounter unexpected information that does not match the info here.**
+
+## Architecture Overview
+
+### Serverless Stack
+- **Frontend**: React 18 (deployed as static site)
+- **Backend**: Node.js Serverless Functions (Vercel)
+- **Database**: MongoDB Atlas (cloud-hosted)
+- **Deployment**: Single Vercel deployment (no separate backend server)
+- **Authentication**: JWT-based with bcrypt password hashing
 
 ## Working Effectively
 
 ### Prerequisites Verification
 Ensure the following are available before proceeding:
-- **Java 17** or higher (`java -version`)
-- **Maven 3.6** or higher (`mvn -version`) 
-- **Node.js 16** or higher (`node --version`) - Tested with Node.js 20.19.4
+- **Node.js 18** or higher (`node --version`) - Tested with Node.js 20.19.4
 - **npm** (`npm --version`) - Tested with npm 10.8.2
+- **Vercel CLI** (optional for local testing): `npm install -g vercel`
+- **MongoDB Atlas account** with cluster created
 
-### Backend Setup and Build
+### Serverless API Setup
 **NEVER CANCEL builds or long-running commands. Set appropriate timeouts.**
 
-1. **Install backend dependencies:**
+1. **Install root dependencies (for serverless functions):**
    ```bash
-   mvn clean install -DskipTests
+   npm install
    ```
-   - **NEVER CANCEL**: Takes approximately 2 minutes on first run. Set timeout to 180+ seconds.
-   - Downloads all Maven dependencies including Spring Boot, Apache POI, H2 Database
-   - Creates executable JAR in `target/finance-dashboard-0.0.1-SNAPSHOT.jar`
+   - Installs: mongoose, bcryptjs, jsonwebtoken, xlsx, multer
+   - Takes approximately 10-15 seconds
 
-2. **Run backend tests:**
+2. **Install API dependencies:**
    ```bash
-   mvn test
+   cd api && npm install
    ```
-   - **Note**: No tests currently exist in the backend. This command completes in ~1 second.
+   - **Note**: No tests currently exist. This command completes in ~1 second.
 
-3. **Start Spring Boot application:**
+3. **Set up environment variables:**
    ```bash
-   mvn spring-boot:run
+   cp .env.example .env
    ```
-   - Starts in approximately 4 seconds
-   - Runs on `http://localhost:8080`
-   - Creates H2 in-memory database with default categories
-   - H2 Console available at `http://localhost:8080/h2-console`
-     - JDBC URL: `jdbc:h2:mem:financedb`
-     - Username: `sa`
-     - Password: (empty)
+   - Edit `.env` with your MongoDB Atlas connection string
+   - Add JWT secret (generate with: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`)
+   - Required variables:
+     - `MONGODB_URI`: MongoDB Atlas connection string
+     - `JWT_SECRET`: Secret key for JWT token generation
+     - `JWT_EXPIRATION`: Token expiration time (e.g., 24h)
+
+4. **Start local Vercel development server:**
+   ```bash
+   vercel dev
+   ```
+   - Simulates serverless environment locally
+   - Runs on `http://localhost:3000`
+   - Both frontend and API available on same port
+   - Hot-reload enabled for development
+   - **Note**: First run may prompt for Vercel project setup
 
 ### Frontend Setup and Build
 **CRITICAL**: All frontend commands must use `CI=false` to avoid build failures due to linting warnings.
@@ -65,7 +82,7 @@ Ensure the following are available before proceeding:
    - **CRITICAL**: Must use `CI=false` to ignore linting warnings
    - Compiles with warnings but runs successfully
    - Runs on `http://localhost:3000`
-   - Automatically proxies API requests to `http://localhost:8080`
+   - Automatically proxies API requests to `http://localhost:3000/api`
    - Hot-reload enabled for development
 
 4. **Build for production:**
@@ -80,33 +97,33 @@ Ensure the following are available before proceeding:
    ```bash
    npm test
    ```
-   - **Note**: No tests currently exist in the frontend. Use `npm test -- --passWithNoTests` to exit with code 0.
+   - **Note**: No tests currently exist. Use `npm test -- --passWithNoTests` to exit with code 0.
 
 ## Validation
 
 ### Manual Testing Requirements
 **ALWAYS manually validate application functionality after making changes.**
 
-1. **Start both applications:**
+1. **Start application with Vercel Dev:**
    ```bash
-   # Terminal 1: Backend
-   mvn spring-boot:run
-   
-   # Terminal 2: Frontend  
-   cd frontend && CI=false npm start
+   vercel dev
    ```
+   - Runs both frontend and serverless functions
+   - Accessible at `http://localhost:3000`
+   - API endpoints at `http://localhost:3000/api/*`
 
-2. **Verify backend API functionality:**
+2. **Verify API functionality:**
    ```bash
-   # Test categories endpoint
-   curl http://localhost:8080/api/categories
+   # Test health check
+   curl http://localhost:3000/api/categories
    
-   # Should return 11 default categories: Food & Dining, Transportation, Shopping, etc.
+   # Should return default categories after registering/logging in
    ```
 
 3. **Complete user workflow validation:**
    - Open browser to `http://localhost:3000`
-   - Verify dashboard loads with empty state
+   - Register a new user account
+   - Login with credentials
    - **CRITICAL TEST**: Upload an Excel file:
      - Create test Excel file with columns: Date, Description, Amount, Reference
      - Upload via the file upload component
@@ -124,65 +141,107 @@ Ensure the following are available before proceeding:
 ### Build Validation
 **ALWAYS run these commands before committing changes:**
 
-1. **Backend validation:**
+1. **Serverless API validation:**
    ```bash
-   mvn clean install -DskipTests  # Must complete without errors
-   mvn spring-boot:run            # Must start successfully
+   npm install                    # Install root dependencies
+   cd api && npm install          # Install API dependencies
+   vercel dev                     # Start local serverless environment
    ```
 
 2. **Frontend validation:**
    ```bash
    cd frontend
    CI=false npm run build         # Must complete without errors
-   CI=false npm start            # Must compile and serve
+   CI=false npm start             # Must compile and serve
    ```
 
 ## Common Issues and Solutions
+
+### Mongoose "Cannot find module" Error
+- **Problem**: Serverless functions can't find mongoose or other dependencies
+- **Solution**: Ensure dependencies are in root `package.json`, not just `api/package.json`
+- **Fix**: Run `npm install` at project root
+
+### "MissingSchemaError: Schema hasn't been registered"
+- **Problem**: Mongoose model not imported before populate
+- **Solution**: Import all models used in populate() calls at top of file
+- **Example**: `const Category = require('../lib/server/models/Category')`
 
 ### Frontend Build Issues
 - **Problem**: Build fails with ESLint errors
 - **Solution**: Always use `CI=false` prefix for npm commands
 - **Example**: `CI=false npm run build` instead of `npm run build`
 
-### Backend Database Issues
-- **Problem**: Database connection errors
-- **Solution**: H2 is in-memory; restart Spring Boot application to reset database
+### MongoDB Connection Issues
+- **Problem**: Cannot connect to MongoDB Atlas
+- **Solution**: Check `MONGODB_URI` in `.env` and Vercel environment variables
+- **Verify**: Database user password is correct and IP is whitelisted
+- **Note**: Use URL encoding for special characters in password
+
+### Vercel Serverless Function Limit
+- **Problem**: "No more than 12 Serverless Functions" error
+- **Solution**: Keep helper files outside `/api` directory (use `/lib/server`)
+- **Note**: Only files in `/api/*.js` count as serverless functions
 
 ### Port Conflicts
-- **Backend**: Change port in `src/main/resources/application.yml` (server.port)
-- **Frontend**: Set PORT environment variable: `PORT=3001 CI=false npm start`
+- **Local Development**: Vercel dev runs on `http://localhost:3000`
+- **Change Port**: Set PORT environment variable: `PORT=3001 vercel dev`
 
 ## Key Project Information
 
 ### Technology Stack
-- **Backend**: Spring Boot 3.2.0, Java 17, Maven, H2 Database, Apache POI
+- **Backend**: Node.js Serverless Functions, Mongoose, bcryptjs, JWT, XLSX
 - **Frontend**: React 18, Ant Design, Chart.js, Axios, Node.js 20
+- **Database**: MongoDB Atlas (cloud-hosted, NoSQL)
+- **Deployment**: Vercel (frontend + serverless backend)
 
 ### Project Structure
 ```
 finance-dashboard/
-├── src/main/java/com/finance/dashboard/    # Backend Java source
-│   ├── controller/                         # REST API controllers
-│   ├── service/                           # Business logic
-│   ├── model/                             # JPA entities
-│   ├── repository/                        # Data access layer
-│   └── dto/                               # Data transfer objects
-├── src/main/resources/
-│   └── application.yml                    # Backend configuration
+├── api/                                   # Serverless API functions
+│   ├── auth.js                           # Authentication endpoints
+│   ├── categories.js                     # Category management
+│   ├── dashboard.js                      # Dashboard analytics
+│   ├── transactions.js                   # Transaction CRUD
+│   ├── upload.js                         # Excel file processing
+│   └── package.json                      # API-specific dependencies
+├── lib/server/                           # Shared backend code
+│   ├── db.js                            # MongoDB connection
+│   ├── models/                          # Mongoose schemas
+│   │   ├── User.js
+│   │   ├── Category.js
+│   │   ├── Transaction.js
+│   │   └── UserCategoryBudget.js
+│   ├── middleware/
+│   │   └── auth.js                      # JWT authentication
+│   └── utils/
+│       ├── categorizer.js               # Auto-categorization logic
+│       └── jwt.js                       # JWT utilities
 ├── frontend/
 │   ├── src/
 │   │   ├── components/                    # React components
 │   │   ├── services/                      # API service layer
 │   │   └── charts/                        # Chart components
 │   └── package.json                       # Frontend dependencies
-└── pom.xml                                # Maven configuration
+├── package.json                           # Root dependencies (serverless)
+├── vercel.json                            # Vercel configuration
+└── .env.example                           # Environment variables template
 ```
 
 ### Key API Endpoints
+- `POST /api/auth` - Register/Login (body determines action)
+- `GET /api/auth/me` - Get current user
 - `GET /api/categories` - List all categories
-- `POST /api/upload/excel` - Upload and process Excel file
-- `GET /api/dashboard/summary` - Financial summary
-- `GET /api/dashboard/transactions` - Transaction list
+- `POST /api/categories` - Create category
+- `PUT /api/categories/:id` - Update category
+- `DELETE /api/categories/:id` - Delete category
+- `POST /api/upload` - Upload and process Excel file
+- `GET /api/dashboard?type=summary` - Financial summary
+- `GET /api/dashboard?type=transactions` - Transaction list with filters
+- `GET /api/transactions` - List transactions
+- `POST /api/transactions` - Create transaction
+- `PUT /api/transactions/:id` - Update transaction
+- `DELETE /api/transactions/:id` - Delete transaction
 
 ### Automatic Categorization
 The application automatically categorizes transactions based on description keywords:
@@ -192,9 +251,11 @@ The application automatically categorizes transactions based on description keyw
 - "atm", "withdrawal" → Transfer
 
 ### Configuration Files
-- **Backend config**: `src/main/resources/application.yml`
+- **Vercel config**: `vercel.json` (build, routes, headers)
+- **Environment**: `.env` (local), Vercel dashboard (production)
 - **Frontend config**: `frontend/package.json`
-- **CORS**: Configured for `http://localhost:3000` in backend controllers
+- **API dependencies**: Root `package.json` (mongoose, bcryptjs, etc.)
+- **CORS**: Configured in `vercel.json` headers (allows all origins for API)
 
 ## Development Guidelines
 
@@ -211,5 +272,7 @@ The application automatically categorizes transactions based on description keyw
 - Frontend build: ~30 seconds
 - Backend startup: ~4 seconds
 - Frontend dev server startup: ~30 seconds
+
+**NEVER CANCEL long-running commands. Wait for completion.**
 
 **NEVER CANCEL long-running commands. Wait for completion.**
