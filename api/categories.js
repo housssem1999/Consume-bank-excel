@@ -12,6 +12,10 @@ module.exports = async (req, res) => {
     await connectToDatabase();
     const user = await authenticateUser(req);
 
+    // Extract category ID from URL path for PUT/DELETE operations
+    const urlParts = req.url.split('?')[0].split('/');
+    const categoryId = urlParts[urlParts.length - 1] !== 'categories' ? urlParts[urlParts.length - 1] : null;
+
     if (req.method === 'GET') {
       // Get all categories (system + user's custom categories)
       const categories = await Category.find({
@@ -85,6 +89,115 @@ module.exports = async (req, res) => {
           color: category.color,
           monthlyBudget: category.monthlyBudget
         }
+      });
+
+    } else if (req.method === 'PUT') {
+      // Update existing category
+      if (!categoryId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Category ID is required'
+        });
+      }
+
+      const { name, description, color, monthlyBudget } = req.body;
+
+      // Find the category
+      const category = await Category.findOne({
+        _id: categoryId,
+        user: user._id
+      });
+
+      if (!category) {
+        return res.status(404).json({
+          success: false,
+          message: 'Category not found or you do not have permission to update it'
+        });
+      }
+
+      // Check if name is being changed and if it conflicts
+      if (name && name !== category.name) {
+        const existing = await Category.findOne({
+          name,
+          _id: { $ne: categoryId },
+          $or: [{ user: user._id }, { user: null }]
+        });
+
+        if (existing) {
+          return res.status(400).json({
+            success: false,
+            message: 'Category name already exists'
+          });
+        }
+        category.name = name;
+      }
+
+      // Update fields
+      if (description !== undefined) category.description = description;
+      if (color !== undefined) category.color = color;
+      if (monthlyBudget !== undefined) category.monthlyBudget = monthlyBudget;
+
+      await category.save();
+
+      return res.status(200).json({
+        success: true,
+        message: 'Category updated successfully',
+        category: {
+          id: category._id,
+          name: category.name,
+          description: category.description,
+          color: category.color,
+          monthlyBudget: category.monthlyBudget
+        }
+      });
+
+    } else if (req.method === 'DELETE') {
+      // Delete category
+      if (!categoryId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Category ID is required'
+        });
+      }
+
+      const category = await Category.findOne({
+        _id: categoryId,
+        user: user._id
+      });
+
+      if (!category) {
+        return res.status(404).json({
+          success: false,
+          message: 'Category not found or you do not have permission to delete it'
+        });
+      }
+
+      // Check if category is being used by transactions
+      const Transaction = require('../lib/server/models/Transaction');
+      const transactionCount = await Transaction.countDocuments({
+        category: categoryId,
+        user: user._id
+      });
+
+      if (transactionCount > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Cannot delete category. It is used by ${transactionCount} transaction(s).`
+        });
+      }
+
+      // Delete associated budgets
+      await UserCategoryBudget.deleteMany({
+        category: categoryId,
+        user: user._id
+      });
+
+      // Delete the category
+      await Category.deleteOne({ _id: categoryId });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Category deleted successfully'
       });
 
     } else {
