@@ -45,23 +45,29 @@ module.exports = async (req, res) => {
       // Calculate statistics
       let totalIncome = 0;
       let totalExpenses = 0;
-      const categoryBreakdown = {};
+      const expensesByCategory = {};
+      const incomeByCategory = {};
       const monthlyTrends = {};
 
       for (const transaction of transactions) {
+        const categoryName = transaction.category ? transaction.category.name : 'Uncategorized';
+
         if (transaction.type === 'INCOME') {
           totalIncome += transaction.amount;
+          
+          // Income by category
+          if (!incomeByCategory[categoryName]) {
+            incomeByCategory[categoryName] = 0;
+          }
+          incomeByCategory[categoryName] += transaction.amount;
         } else if (transaction.type === 'EXPENSE') {
           totalExpenses += transaction.amount;
-        }
-
-        // Category breakdown
-        const categoryName = transaction.category ? transaction.category.name : 'Uncategorized';
-        if (!categoryBreakdown[categoryName]) {
-          categoryBreakdown[categoryName] = 0;
-        }
-        if (transaction.type === 'EXPENSE') {
-          categoryBreakdown[categoryName] += transaction.amount;
+          
+          // Expenses by category
+          if (!expensesByCategory[categoryName]) {
+            expensesByCategory[categoryName] = 0;
+          }
+          expensesByCategory[categoryName] += Math.abs(transaction.amount);
         }
 
         // Monthly trends
@@ -76,10 +82,15 @@ module.exports = async (req, res) => {
         }
       }
 
-      // Convert category breakdown to array
-      const categoryBreakdownArray = Object.entries(categoryBreakdown)
-        .map(([name, amount]) => ({ name, amount }))
-        .sort((a, b) => b.amount - a.amount);
+      // Convert expenses by category to array with correct property names
+      const expensesByCategoryArray = Object.entries(expensesByCategory)
+        .map(([categoryName, totalAmount]) => ({ categoryName, totalAmount }))
+        .sort((a, b) => b.totalAmount - a.totalAmount);
+
+      // Convert income by category to array with correct property names
+      const incomeByCategoryArray = Object.entries(incomeByCategory)
+        .map(([categoryName, totalAmount]) => ({ categoryName, totalAmount }))
+        .sort((a, b) => b.totalAmount - a.totalAmount);
 
       // Convert monthly trends to array with proper format for SavingsRateChart
       const monthNames = [
@@ -107,7 +118,8 @@ module.exports = async (req, res) => {
         totalExpenses,
         netIncome: totalIncome - totalExpenses,
         totalTransactions: transactions.length,
-        categoryBreakdown: categoryBreakdownArray,
+        expensesByCategory: expensesByCategoryArray,
+        incomeByCategory: incomeByCategoryArray,
         monthlyTrends: monthlyTrendsArray
       });
     }
