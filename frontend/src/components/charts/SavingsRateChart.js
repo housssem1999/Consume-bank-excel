@@ -26,11 +26,24 @@ const SavingsRateChart = ({ data }) => {
   }
 
   const sortedData = [...data].sort((a, b) => {
+    // Sort by year first, then by month number
     if (a.year !== b.year) return a.year - b.year;
-    return a.month - b.month;
+    return (a.monthNum || a.month) - (b.monthNum || b.month);
   });
 
-  const labels = sortedData.map(item => `${item.monthName} ${item.year}`);
+  const labels = sortedData.map(item => {
+    // Support both old format (monthName + year) and new format
+    if (item.monthName && item.year) {
+      return `${item.monthName} ${item.year}`;
+    }
+    // Fallback: parse from month string like "2025-01"
+    if (item.month && typeof item.month === 'string' && item.month.includes('-')) {
+      const [year, monthNum] = item.month.split('-');
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return `${monthNames[parseInt(monthNum) - 1]} ${year}`;
+    }
+    return item.month || 'Unknown';
+  });
   
   // Calculate savings rate and determine colors
   const savingsRateData = sortedData.map(item => {
