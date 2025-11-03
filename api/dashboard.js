@@ -81,9 +81,25 @@ module.exports = async (req, res) => {
         .map(([name, amount]) => ({ name, amount }))
         .sort((a, b) => b.amount - a.amount);
 
-      // Convert monthly trends to array
+      // Convert monthly trends to array with proper format for SavingsRateChart
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+
       const monthlyTrendsArray = Object.entries(monthlyTrends)
-        .map(([month, data]) => ({ month, ...data }))
+        .map(([monthKey, data]) => {
+          const [year, month] = monthKey.split('-').map(Number);
+          return {
+            month: monthKey,
+            year,
+            monthNum: month,
+            monthName: monthNames[month - 1],
+            income: data.income,
+            expenses: data.expenses,
+            netAmount: data.income - data.expenses
+          };
+        })
         .sort((a, b) => a.month.localeCompare(b.month));
 
       return res.status(200).json({
