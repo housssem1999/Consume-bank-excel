@@ -36,6 +36,8 @@ app:
   jwt:
     secret: ${JWT_SECRET:mySecretKeyThatIsAtLeast32CharactersLongForHS256Algorithm}
     expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
+  huggingface:
+    api-key: ${HUGGINGFACE_API_KEY:} # Optional - using free inference API
 
 logging:
   level:

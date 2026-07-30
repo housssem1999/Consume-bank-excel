@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { Layout, Menu, Button, Dropdown, Avatar } from 'antd';
-import { DashboardOutlined, UploadOutlined, BarChartOutlined, SettingOutlined, UserOutlined, LogoutOutlined, ContactsOutlined } from '@ant-design/icons';
+import { DashboardOutlined, UploadOutlined, BarChartOutlined, SettingOutlined, UserOutlined, LogoutOutlined, ContactsOutlined, RobotOutlined } from '@ant-design/icons';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Analytics } from '@vercel/analytics/react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -12,6 +12,7 @@ import Dashboard from './components/Dashboard';
 import FileUpload from './components/FileUpload';
 import TransactionList from './components/TransactionList';
 import CategoryManager from './components/CategoryManager';
+import MLAnalytics from './components/MLAnalytics';
 import Contact from './components/Contact';
 import './App.css';
 
@@ -43,12 +44,18 @@ const AuthenticatedApp = () => {
     },
     {
       key: '4',
+      icon: <RobotOutlined />,
+      label: 'AI Analytics',
+      path: '/ml-analytics'
+    },
+    {
+      key: '5',
       icon: <SettingOutlined />,
       label: 'Categories',
       path: '/categories'
     },
     {
-      key: '5',
+      key: '6',
       icon: <ContactsOutlined />,
       label: 'Contact',
       path: '/contact'
@@ -174,6 +181,7 @@ const AuthenticatedApp = () => {
               <Route path="/" element={<Dashboard />} />
               <Route path="/upload" element={<FileUpload />} />
               <Route path="/transactions" element={<TransactionList />} />
+              <Route path="/ml-analytics" element={<MLAnalytics />} />
               <Route path="/categories" element={<CategoryManager />} />
               <Route path="/contact" element={<Contact />} />
             </Routes>
